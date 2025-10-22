@@ -9,7 +9,7 @@ class DioHelper {
   static void init() {
     dio = Dio(
       BaseOptions(
-        baseUrl: 'https://Bcknd.systego.net',
+        baseUrl: 'https://bcknd.food2go.online/',
         receiveDataWhenStatusError: true,
         connectTimeout: const Duration(seconds: 20),
         receiveTimeout: const Duration(seconds: 20),
@@ -21,7 +21,7 @@ class DioHelper {
       InterceptorsWrapper(
         onError: (DioException e, handler) async {
           if (e.response?.statusCode == 401) {
-            print(' Unauthorized — broadcasting sessionExpired');
+            print('🚨 Unauthorized — broadcasting sessionExpired');
             await CacheHelper.clearAllData();
             SessionManager.notifySessionExpired();
           }
@@ -44,12 +44,17 @@ class DioHelper {
       if (token != null) 'Authorization': 'Bearer $token',
     };
 
+    // Convert query parameters to String values
+    final Map<String, dynamic>? convertedQuery = query?.map(
+          (key, value) => MapEntry(key, value.toString()),
+    );
+
     final uri = Uri.parse(
       dio.options.baseUrl + url,
-    ).replace(queryParameters: query);
+    ).replace(queryParameters: convertedQuery);
     log('🔗 Full Request URL: $uri');
 
-    return await dio.get(url, queryParameters: query);
+    return await dio.get(url, queryParameters: convertedQuery);
   }
 
   static Future<Response> postData({
@@ -67,12 +72,17 @@ class DioHelper {
       if (token != null) 'Authorization': 'Bearer $token',
     };
 
+    // Convert query parameters to String values
+    final Map<String, dynamic>? convertedQuery = query?.map(
+          (key, value) => MapEntry(key, value.toString()),
+    );
+
     final uri = Uri.parse(
       dio.options.baseUrl + url,
-    ).replace(queryParameters: query);
+    ).replace(queryParameters: convertedQuery);
     log('🔗 Full Request URL: $uri');
 
-    return await dio.post(url, data: data, queryParameters: query);
+    return await dio.post(url, data: data, queryParameters: convertedQuery);
   }
 
   static Future<Response> putData({
@@ -93,10 +103,15 @@ class DioHelper {
       if (token != null) 'Authorization': 'Bearer $token',
     };
 
+    // Convert query parameters to String values
+    final Map<String, dynamic>? convertedQuery = query?.map(
+          (key, value) => MapEntry(key, value.toString()),
+    );
+
     return await dio.put(
       url,
       data: isFormData ? FormData.fromMap(data ?? {}) : data,
-      queryParameters: query,
+      queryParameters: convertedQuery,
     );
   }
 
@@ -113,12 +128,17 @@ class DioHelper {
       if (token != null) 'Authorization': 'Bearer $token',
     };
 
+    // Convert query parameters to String values
+    final Map<String, dynamic>? convertedQuery = query?.map(
+          (key, value) => MapEntry(key, value.toString()),
+    );
+
     final uri = Uri.parse(
       dio.options.baseUrl + url,
-    ).replace(queryParameters: query);
+    ).replace(queryParameters: convertedQuery);
     log('🔗 Full Request URL: $uri');
 
-    return await dio.patch(url, data: data, queryParameters: query);
+    return await dio.patch(url, data: data, queryParameters: convertedQuery);
   }
 
   static Future<Response> deleteData({
@@ -133,12 +153,17 @@ class DioHelper {
       if (token != null) 'Authorization': 'Bearer $token',
     };
 
+    // Convert query parameters to String values
+    final Map<String, dynamic>? convertedQuery = query?.map(
+          (key, value) => MapEntry(key, value.toString()),
+    );
+
     final uri = Uri.parse(
       dio.options.baseUrl + url,
-    ).replace(queryParameters: query);
+    ).replace(queryParameters: convertedQuery);
     log('🔗 Full Request URL: $uri');
 
-    return await dio.delete(url, queryParameters: query);
+    return await dio.delete(url, queryParameters: convertedQuery);
   }
 
   static void printResponse(Response response) {

@@ -1,10 +1,17 @@
+import 'package:admin_food2go/feature/home_screen/profile_tab/view/profile_tab.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
-
-import 'order_status_screen/order_status_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dine_in_order_tab/cubit/dine_cubit.dart';
+import 'dine_in_order_tab/view/dine_in_order_tab.dart';
+import 'home_tab/home_tab.dart';
+import 'order_tab/view/order_tab.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  static const routeName = '/home-screen';
+  final int? branchId;
+
+  const HomeScreen({super.key, this.branchId});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -12,16 +19,32 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  int? _branchId;
 
-  static const List<Widget> _pages = [
-    HomeTab(),
-    OrdersTab(),
-    OrderStatusScreen(),
-    SettingsTab(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+  }
+
+
+  void _navigateToTab(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> _pages = [
+      HomeTab(onNavigateToTab: _navigateToTab),
+      OrderTab(),
+      BlocProvider(
+        create: (context) => DineCubit(),
+        child: DineInOrderTab(),
+      ),
+      ProfileTab(),
+    ];
+
     return Scaffold(
       body: _pages[_selectedIndex],
       bottomNavigationBar: CurvedNavigationBar(
@@ -30,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
         items: const [
           Icon(Icons.home, size: 30, color: Colors.white),
           Icon(Icons.shopping_cart, size: 30, color: Colors.white),
-          Icon(Icons.inventory, size: 30, color: Colors.white),
+          Icon(Icons.restaurant_menu, size: 30, color: Colors.white), // Changed icon to restaurant
           Icon(Icons.person, size: 30, color: Colors.white),
         ],
         color: const Color.fromRGBO(158, 9, 15, 1),
@@ -44,54 +67,6 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
       ),
-    );
-  }
-}
-
-// Home Tab
-class HomeTab extends StatelessWidget {
-  const HomeTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Home', style: TextStyle(fontSize: 24)),
-    );
-  }
-}
-
-// Orders Tab
-class OrdersTab extends StatelessWidget {
-  const OrdersTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Orders', style: TextStyle(fontSize: 24)),
-    );
-  }
-}
-
-// // Products Tab
-// class ProductsTab extends StatelessWidget {
-//   const ProductsTab({super.key});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return const Center(
-//       child: Text('Products', style: TextStyle(fontSize: 24)),
-//     );
-//   }
-// }
-
-// Settings Tab
-class SettingsTab extends StatelessWidget {
-  const SettingsTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Settings', style: TextStyle(fontSize: 24)),
     );
   }
 }

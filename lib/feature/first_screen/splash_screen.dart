@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  static const routeName = '/splash';
+
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -20,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _initAnimations();
-    _navigateToHome();
+    _navigateToLogin();
   }
 
   void _initAnimations() {
@@ -46,10 +48,10 @@ class _SplashScreenState extends State<SplashScreen>
     _scaleController.forward();
   }
 
-  void _navigateToHome() {
+  void _navigateToLogin() {
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        Navigator.of(context).pushReplacementNamed('/login');
       }
     });
   }
@@ -116,7 +118,7 @@ class _SplashScreenState extends State<SplashScreen>
           FadeTransition(
             opacity: _fadeAnimation,
             child: const Text(
-              ' By Admin Food2Go',
+              'By Admin Food2Go',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,

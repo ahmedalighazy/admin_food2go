@@ -13,8 +13,8 @@ class LoginValidator {
     if (value == null || value.isEmpty) {
       return 'Please enter your password';
     }
-    if (value.length < 6) {
-      return 'Password must be at least 6 characters';
+    if (value.length < 3) {
+      return 'Password must be at least 3 characters';
     }
     return null;
   }
@@ -45,4 +45,21 @@ class LoginValidator {
     }
     return null;
   }
+
+  static String handleValidationErrors(Map<String, dynamic>? errors) {
+    if (errors == null || errors.isEmpty) {
+      return 'Validation failed';
+    }
+
+    final firstError = errors.values.first;
+    if (firstError is List && firstError.isNotEmpty) {
+      return firstError.first.toString();
+    } else if (firstError is String) {
+      return firstError;
+    }
+
+    return 'Validation failed';
+  }
+
 }
+
