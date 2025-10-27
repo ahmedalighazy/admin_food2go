@@ -6,6 +6,7 @@ import '../../../../core/utils/responsive_ui.dart';
 import '../cubit/dine_cubit.dart';
 import '../cubit/dine_state.dart';
 import '../model/dine_model.dart';
+import 'package:admin_food2go/core/services/role_manager.dart';
 
 class DineInOrderTab extends StatefulWidget {
   const DineInOrderTab({super.key});
@@ -17,11 +18,18 @@ class DineInOrderTab extends StatefulWidget {
 class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProviderStateMixin {
   String selectedFilter = 'All';
   late TabController _tabController;
+  final directRole = RoleManager.getDirectRole();
+  bool isBranchRole = false;
+  num? currentBranchId;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    isBranchRole = directRole == 'branch';
+    if (isBranchRole) {
+      currentBranchId = RoleManager.getCurrentBranchId();
+    }
     DineCubit.get(context).getAllBranches();
   }
 
@@ -42,14 +50,24 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
                 children: [
                   const Icon(Icons.error_outline, color: Colors.white),
                   SizedBox(width: ResponsiveUI.spacing(context, 12)),
-                  Expanded(child: Text(state.message)),
+                  Expanded(
+                    child: Text(
+                      state.message,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
                 ],
               ),
               backgroundColor: Colors.red.shade700,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 12)),
+              behavior: SnackBarBehavior.fixed, // Changed from floating to fixed
+              duration: const Duration(seconds: 4),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
               ),
+              margin: EdgeInsets.zero,
             ),
           );
         }
@@ -74,7 +92,7 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
               _buildBranchSelector(cubit, state),
 
               // Rest of content - Scrollable
-              if (cubit.selectedBranch != null)
+              if (cubit.selectedBranch != null || isBranchRole)
                 Expanded(
                   child: Column(
                     children: [
@@ -104,6 +122,134 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
   }
 
   Widget _buildBranchSelector(DineCubit cubit, DineState state) {
+    if (isBranchRole) {
+      // For branch role, show fixed branch info
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        margin: EdgeInsets.all(ResponsiveUI.padding(context, 16)),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              AppColors.colorPrimaryLight.withOpacity(0.3),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 20)),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.colorPrimary.withOpacity(0.15),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+              spreadRadius: 0,
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(ResponsiveUI.padding(context, 20)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(ResponsiveUI.padding(context, 12)),
+                    decoration: BoxDecoration(
+                      color: AppColors.colorPrimary,
+                      borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 12)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.colorPrimary.withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.store_rounded,
+                      color: Colors.white,
+                      size: ResponsiveUI.iconSize(context, 24),
+                    ),
+                  ),
+                  SizedBox(width: ResponsiveUI.spacing(context, 12)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Current Branch',
+                        style: TextStyle(
+                          fontSize: ResponsiveUI.fontSize(context, 20),
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.colorPrimary,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      Text(
+                        'Managing your branch location',
+                        style: TextStyle(
+                          fontSize: ResponsiveUI.fontSize(context, 12),
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: ResponsiveUI.spacing(context, 16)),
+              Container(
+                padding: EdgeInsets.all(ResponsiveUI.padding(context, 16)),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 12)),
+                  border: Border.all(color: Colors.grey.shade200, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.location_on_rounded,
+                      size: ResponsiveUI.iconSize(context, 18),
+                      color: AppColors.colorPrimary,
+                    ),
+                    SizedBox(width: ResponsiveUI.spacing(context, 12)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Branch ID: $currentBranchId',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.colorPrimary,
+                              fontSize: ResponsiveUI.fontSize(context, 15),
+                            ),
+                          ),
+                          Text(
+                            'Your assigned branch',
+                            style: TextStyle(
+                              fontSize: ResponsiveUI.fontSize(context, 12),
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (state is DineLoading && cubit.branches == null) {
       return Container(
         margin: EdgeInsets.all(ResponsiveUI.padding(context, 16)),
@@ -512,13 +658,17 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
       return _buildEmptyState(
         icon: Icons.table_restaurant_rounded,
         title: 'No Tables Found',
-        message: 'There are no tables available for this branch',
+        message: isBranchRole
+            ? 'There are no tables available for your branch'
+            : 'There are no tables available for this branch',
       );
     }
 
     return RefreshIndicator(
       onRefresh: () async {
-        if (cubit.selectedBranch?.id == -1) {
+        if (isBranchRole) {
+          await cubit.refreshData(branchId: currentBranchId!.toInt());
+        } else if (cubit.selectedBranch?.id == -1) {
           await cubit.loadAllBranchesOrders();
         } else {
           await cubit.refreshData(branchId: cubit.selectedBranch?.id?.toInt() ?? 0);
@@ -838,7 +988,9 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
       return _buildEmptyState(
         icon: Icons.inbox_rounded,
         title: 'No Orders Found',
-        message: cubit.selectedBranch?.id == -1
+        message: isBranchRole
+            ? 'No orders found for your branch with the selected filters'
+            : cubit.selectedBranch?.id == -1
             ? 'No orders found across all branches'
             : 'There are no orders for the selected filters',
       );
@@ -846,7 +998,9 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
 
     return RefreshIndicator(
       onRefresh: () async {
-        if (cubit.selectedBranch?.id == -1) {
+        if (isBranchRole) {
+          await cubit.refreshData(branchId: currentBranchId!.toInt());
+        } else if (cubit.selectedBranch?.id == -1) {
           await cubit.loadAllBranchesOrders();
         } else {
           await cubit.refreshData(branchId: cubit.selectedBranch?.id?.toInt() ?? 0);
@@ -870,13 +1024,15 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
     }
 
     String branchName = '';
-    if (cubit.selectedBranch?.id == -1) {
+    if (!isBranchRole && cubit.selectedBranch?.id == -1) {
       try {
         final branch = cubit.branches?.firstWhere((b) => b.id == order.branchId);
         branchName = branch?.name ?? '';
       } catch (e) {
         branchName = '';
       }
+    } else if (isBranchRole) {
+      branchName = 'Your Branch';
     }
 
     return Container(
@@ -912,7 +1068,8 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
                     children: [
                       _buildStatusBadge(order.orderStatus?.toUpperCase() ?? 'UNKNOWN', statusColor),
                       _buildTypeBadge(order.type?.toUpperCase() ?? 'DINE-IN'),
-                      if (branchName.isNotEmpty) _buildBranchBadge(branchName),
+                      if (branchName.isNotEmpty && !isBranchRole) _buildBranchBadge(branchName),
+                      if (isBranchRole) _buildBranchBadge(branchName),
                     ],
                   ),
                 ),
@@ -1233,13 +1390,17 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
       return _buildEmptyState(
         icon: Icons.person_pin_outlined,
         title: 'No Captain Orders',
-        message: 'There are no orders assigned to captains yet',
+        message: isBranchRole
+            ? 'There are no orders assigned to captains in your branch yet'
+            : 'There are no orders assigned to captains yet',
       );
     }
 
     return RefreshIndicator(
       onRefresh: () async {
-        if (cubit.selectedBranch?.id == -1) {
+        if (isBranchRole) {
+          await cubit.refreshData(branchId: currentBranchId!.toInt());
+        } else if (cubit.selectedBranch?.id == -1) {
           await cubit.loadAllBranchesOrders();
         } else {
           await cubit.refreshData(branchId: cubit.selectedBranch?.id?.toInt() ?? 0);

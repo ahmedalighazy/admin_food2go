@@ -7,9 +7,13 @@ class DioHelper {
   static late Dio dio;
 
   static void init() {
+    // Get base URL from cache or use default
+    final String baseUrl = CacheHelper.getData(key: 'base_url') ??
+        'https://bcknd.food2go.online/';
+
     dio = Dio(
       BaseOptions(
-        baseUrl: 'https://bcknd.food2go.online/',
+        baseUrl: baseUrl,
         receiveDataWhenStatusError: true,
         connectTimeout: const Duration(seconds: 20),
         receiveTimeout: const Duration(seconds: 20),
@@ -29,6 +33,20 @@ class DioHelper {
         },
       ),
     );
+
+    log('🌐 DioHelper initialized with base URL: $baseUrl');
+  }
+
+  // Method to update base URL dynamically
+  static void updateBaseUrl(String newBaseUrl) {
+    // Ensure the URL ends with a slash
+    String formattedUrl = newBaseUrl;
+    if (!formattedUrl.endsWith('/')) {
+      formattedUrl = '$formattedUrl/';
+    }
+
+    dio.options.baseUrl = formattedUrl;
+    log('🔄 Base URL updated to: $formattedUrl');
   }
 
   static Future<Response> getData({
@@ -77,12 +95,32 @@ class DioHelper {
           (key, value) => MapEntry(key, value.toString()),
     );
 
-    final uri = Uri.parse(
-      dio.options.baseUrl + url,
-    ).replace(queryParameters: convertedQuery);
-    log('🔗 Full Request URL: $uri');
+    // Check if URL is a full URL (starts with http:// or https://)
+    final bool isFullUrl = url.startsWith('http://') || url.startsWith('https://');
 
-    return await dio.post(url, data: data, queryParameters: convertedQuery);
+    if (isFullUrl) {
+      // For full URLs, use them directly
+      log('🔗 Full Request URL (absolute): $url');
+
+      // Create temporary dio instance for full URL
+      final tempDio = Dio(
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 20),
+          receiveTimeout: const Duration(seconds: 20),
+        ),
+      );
+
+      tempDio.options.headers = dio.options.headers;
+      return await tempDio.post(url, data: data, queryParameters: convertedQuery);
+    } else {
+      // For relative URLs, use base URL
+      final uri = Uri.parse(
+        dio.options.baseUrl + url,
+      ).replace(queryParameters: convertedQuery);
+      log('🔗 Full Request URL (relative): $uri');
+
+      return await dio.post(url, data: data, queryParameters: convertedQuery);
+    }
   }
 
   static Future<Response> putData({

@@ -1,8 +1,8 @@
 class UserLogin {
   UserLogin({
-      this.admin, 
-      this.token, 
-      this.role,});
+    this.admin,
+    this.token,
+    this.role,});
 
   UserLogin.fromJson(dynamic json) {
     admin = json['admin'] != null ? Admin.fromJson(json['admin']) : null;
@@ -27,20 +27,20 @@ class UserLogin {
 
 class Admin {
   Admin({
-      this.id, 
-      this.name, 
-      this.email, 
-      this.phone, 
-      this.image, 
-      this.userPositionId, 
-      this.status, 
-      this.emailVerifiedAt, 
-      this.createdAt, 
-      this.updatedAt, 
-      this.role, 
-      this.token, 
-      this.imageLink, 
-      this.userPositions,});
+    this.id,
+    this.name,
+    this.email,
+    this.phone,
+    this.image,
+    this.userPositionId,
+    this.status,
+    this.emailVerifiedAt,
+    this.createdAt,
+    this.updatedAt,
+    this.role,
+    this.token,
+    this.imageLink,
+    this.userPositions,});
 
   Admin.fromJson(dynamic json) {
     id = json['id'];
@@ -98,12 +98,12 @@ class Admin {
 
 class UserPositions {
   UserPositions({
-      this.id, 
-      this.name, 
-      this.status, 
-      this.createdAt, 
-      this.updatedAt, 
-      this.roles,});
+    this.id,
+    this.name,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
+    this.roles,});
 
   UserPositions.fromJson(dynamic json) {
     id = json['id'];
@@ -142,12 +142,12 @@ class UserPositions {
 
 class Roles {
   Roles({
-      this.id, 
-      this.userPositionId, 
-      this.role, 
-      this.action, 
-      this.createdAt, 
-      this.updatedAt,});
+    this.id,
+    this.userPositionId,
+    this.role,
+    this.action,
+    this.createdAt,
+    this.updatedAt,});
 
   Roles.fromJson(dynamic json) {
     id = json['id'];

@@ -7,6 +7,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/services/dio_helper.dart';
 import '../../../../core/utils/error_handler.dart';
+import 'package:admin_food2go/core/services/role_manager.dart';
+import 'package:admin_food2go/core/services/cache_helper.dart.dart';
+import 'package:admin_food2go/feature/auth/model/user_login.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   ProfileCubit() : super(ProfileInitial());
@@ -18,8 +21,9 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(ProfileLoading());
 
     try {
+      // Try API call first
       final response = await DioHelper.getData(
-        url: EndPoint.profile,
+        url: EndPoint.profile, // Use common endpoint
       );
 
       print('📦 Response Status: ${response.statusCode}');
@@ -43,13 +47,61 @@ class ProfileCubit extends Cubit<ProfileState> {
 
         print('✅ Profile loaded successfully: ${profileModel?.name}');
         emit(ProfileSuccess());
+        return; // Success, no fallback
       } else {
-        emit(ProfileError(message: 'Failed to load profile'));
+        print('⚠️ API failed, trying fallback to cached data');
+        // Fallback to cached data
+        await _loadFromCache();
+        if (profileModel != null) {
+          emit(ProfileSuccess());
+        } else {
+          emit(ProfileError(message: 'Failed to load profile data'));
+        }
+        return;
+      }
+    } on DioException catch (e) {
+      print('⚠️ DioException, trying fallback to cached data');
+      // Fallback to cached data on any Dio error
+      await _loadFromCache();
+      if (profileModel != null) {
+        emit(ProfileSuccess());
+      } else {
+        final errorMessage = ErrorHandler.handleError(e);
+        emit(ProfileError(message: errorMessage));
       }
     } catch (error) {
-      print('❌ Error in getProfile: $error');
-      final errorMessage = ErrorHandler.handleError(error);
-      emit(ProfileError(message: errorMessage));
+      print('❌ Error in getProfile: $error, trying fallback');
+      // Fallback to cached data
+      await _loadFromCache();
+      if (profileModel != null) {
+        emit(ProfileSuccess());
+      } else {
+        final errorMessage = ErrorHandler.handleError(error);
+        emit(ProfileError(message: errorMessage));
+      }
+    }
+  }
+
+  Future<void> _loadFromCache() async {
+    try {
+      final cachedAdmin = await CacheHelper.getModel<Admin>(
+        key: 'admin',
+        fromJson: (json) => Admin.fromJson(json),
+      );
+
+      if (cachedAdmin != null) {
+        // Create ProfileModel from cached Admin data
+        profileModel = ProfileModel(
+          name: cachedAdmin.name,
+          email: cachedAdmin.email,
+          phone: cachedAdmin.phone,
+          image: cachedAdmin.image,
+          // Add other fields as needed, mapping from Admin
+        );
+        print('✅ Loaded profile from cache: ${profileModel?.name}');
+      }
+    } catch (e) {
+      print('❌ Failed to load from cache: $e');
     }
   }
 

@@ -8,6 +8,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/shimmer_widgets.dart';
+import '../../../auth/cubit/login_cubit.dart';
+import '../../../auth/view/login_screen.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
@@ -21,7 +23,6 @@ class _ProfileTabState extends State<ProfileTab> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
   File? _selectedImage;
   bool _isEditing = false;
   bool _obscurePassword = true;
@@ -37,7 +38,6 @@ class _ProfileTabState extends State<ProfileTab> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -110,10 +110,59 @@ class _ProfileTabState extends State<ProfileTab> {
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         phone: _phoneController.text.trim(),
-        password: _passwordController.text.isNotEmpty
-            ? _passwordController.text
-            : null,
         imageFile: _selectedImage,
+      );
+    }
+  }
+
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          'Log Out',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        content: const Text(
+          'Are you sure you want to log out? You will need to sign in again.',
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child:  Text(
+              'Log Out',
+              style: TextStyle(color:AppColors.colorPrimary, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      // Call logout from LoginCubit
+      await context.read<LoginCubit>().logout();
+
+      // Navigate to login screen and clear the navigation stack
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        LoginScreen.routeName,
+            (route) => false,
+      );
+
+      _showAwesomeSnackBar(
+        title: 'Logged Out',
+        message: 'You have been logged out successfully.',
+        contentType: ContentType.success,
       );
     }
   }
@@ -131,7 +180,6 @@ class _ProfileTabState extends State<ProfileTab> {
 
           setState(() {
             _isEditing = false;
-            _passwordController.clear();
             _selectedImage = null;
           });
 
@@ -467,7 +515,6 @@ class _ProfileTabState extends State<ProfileTab> {
                                     if (_isEditing) {
                                       _loadProfileData();
                                     } else {
-                                      _passwordController.clear();
                                       _selectedImage = null;
                                     }
                                   });
@@ -550,38 +597,6 @@ class _ProfileTabState extends State<ProfileTab> {
                         if (_isEditing) ...[
                           SizedBox(height: ResponsiveUI.spacing(context, 18)),
 
-                          // Password Field
-                          _buildModernTextField(
-                            controller: _passwordController,
-                            label: 'New Password (Optional)',
-                            icon: Icons.lock_outline_rounded,
-                            enabled: true,
-                            obscureText: _obscurePassword,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off_rounded
-                                    : Icons.visibility_rounded,
-                                color: AppColors.colorPrimary,
-                                size: ResponsiveUI.value(context, 20),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                            ),
-                            validator: (value) {
-                              if (value != null &&
-                                  value.isNotEmpty &&
-                                  value.length < 6) {
-                                return 'Password must be at least 6 characters';
-                              }
-                              return null;
-                            },
-                          ),
-
-                          SizedBox(height: ResponsiveUI.spacing(context, 28)),
 
                           // Update Button
                           Container(
@@ -655,6 +670,64 @@ class _ProfileTabState extends State<ProfileTab> {
                           ),
                         ],
                       ],
+                    ),
+                  ),
+
+                  SizedBox(height: ResponsiveUI.spacing(context, 40)),
+
+                  // Logout Button
+                  Container(
+                    width: double.infinity,
+                    height: ResponsiveUI.value(context, 54),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.colorPrimary,
+                          AppColors.colorPrimary,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(
+                        ResponsiveUI.borderRadius(context, 14),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.withOpacity(0.4),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _logout,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            ResponsiveUI.borderRadius(context, 14),
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.logout_rounded,
+                            color: Colors.white,
+                            size: ResponsiveUI.value(context, 22),
+                          ),
+                          SizedBox(width: ResponsiveUI.spacing(context, 10)),
+                          Text(
+                            'Log Out',
+                            style: TextStyle(
+                              fontSize: ResponsiveUI.fontSize(context, 17),
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 

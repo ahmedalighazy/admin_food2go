@@ -10,19 +10,21 @@ import 'feature/home_screen/dine_in_order_tab/cubit/dine_cubit.dart';
 import 'feature/home_screen/home_screen.dart';
 import 'feature/home_screen/order_tab/cubit/order_cubit.dart';
 import 'feature/home_screen/profile_tab/cubit/profile_cubit.dart';
+import 'feature/restaurant_selection/cubit/restaurant_cubit.dart';
+import 'feature/restaurant_selection/view/restaurant_selection_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
     await CacheHelper.init();
-    log(' CacheHelper initialized successfully');
+    log('✅ CacheHelper initialized successfully');
 
     DioHelper.init();
-    log(' DioHelper initialized successfully');
+    log('✅ DioHelper initialized successfully');
 
   } catch (e) {
-    log(' Initialization error: $e');
+    log('❌ Initialization error: $e');
   }
 
   runApp(const MyApp());
@@ -35,32 +37,30 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (context) => LoginCubit(),
-        ),
-        BlocProvider(
-          create: (context) => DineCubit(),
-        ),
-        BlocProvider(
-          create: (context) => OrderCubit(),
-        ),
-        BlocProvider(
-          create: (context) => ProfileCubit(),
-        ),
+        BlocProvider(create: (context) => RestaurantCubit()),
+        BlocProvider(create: (context) => LoginCubit()),
+        BlocProvider(create: (context) => DineCubit()),
+        BlocProvider(create: (context) => OrderCubit()),
+        BlocProvider(create: (context) => ProfileCubit()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Order Management',
+        title: 'Food2Go Admin',
         theme: ThemeData(
           primaryColor: const Color.fromRGBO(158, 9, 15, 1),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color.fromRGBO(158, 9, 15, 1),
+          ),
           useMaterial3: true,
         ),
-        initialRoute: SplashScreen.routeName,
+        home: const SplashScreen(),
         routes: {
-          SplashScreen.routeName: (context) => SplashScreen(),
+          SplashScreen.routeName: (context) => const SplashScreen(),
+          RestaurantSelectionScreen.routeName: (context) =>
+          const RestaurantSelectionScreen(),
           LoginScreen.routeName: (context) => LoginScreen(),
-          '/home': (context) => HomeScreen(),
-          HomeScreen.routeName: (context) => HomeScreen(),
+          HomeScreen.routeName: (context) => const HomeScreen(),
+          '/home': (context) => const HomeScreen(),
         },
       ),
     );

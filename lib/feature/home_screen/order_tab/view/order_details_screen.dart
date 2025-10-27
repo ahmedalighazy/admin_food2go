@@ -72,7 +72,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                         if (orderItem.orderStatus != null &&
                             orderItem.orderStatus!.isNotEmpty)
 
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
                         // Preparing Time
                         if (orderItem.preparingTime != null)
@@ -92,14 +92,14 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                         if (orderItem.deliveries != null &&
                             orderItem.deliveries!.isNotEmpty)
 
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
                         // Branches Card
                         if (orderItem.branches != null &&
                             orderItem.branches!.isNotEmpty)
-                          // _buildBranchesCard(orderItem.branches!),
+                        // _buildBranchesCard(orderItem.branches!),
 
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
                         // Log Order Card
                         if (orderItem.logOrder != null &&
@@ -709,9 +709,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         .split(' ')
         .map(
           (word) => word.isEmpty
-              ? ''
-              : word[0].toUpperCase() + word.substring(1).toLowerCase(),
-        )
+          ? ''
+          : word[0].toUpperCase() + word.substring(1).toLowerCase(),
+    )
         .join(' ');
   }
 

@@ -1,5 +1,6 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/material.dart';
 import 'package:admin_food2go/core/services/dio_helper.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/end_point.dart';
 import '../../../../core/utils/error_handler.dart';
 import '../model/order_count.dart';
@@ -23,6 +24,7 @@ class OrderCubit extends Cubit<OrderState> {
     String? start,
     String? end,
   }) async {
+    if (isClosed) return;
     emit(OrderLoading());
 
     try {
@@ -41,16 +43,20 @@ class OrderCubit extends Cubit<OrderState> {
 
         if (data != null) {
           orderList = OrderCount.fromJson(data);
+          if (isClosed) return;
           emit(OrderSuccess());
         } else {
+          if (isClosed) return;
           emit(OrderError(message: 'No data received'));
         }
       } else {
+        if (isClosed) return;
         emit(OrderError(
           message: 'Failed to load orders: ${response.statusCode}',
         ));
       }
     } catch (error) {
+      if (isClosed) return;
       final errorMessage = ErrorHandler.handleError(error);
       emit(OrderError(message: errorMessage));
     }
@@ -62,6 +68,7 @@ class OrderCubit extends Cubit<OrderState> {
     String? start,
     String? end,
   }) async {
+    if (isClosed) return;
     emit(OrderListLoading());
 
     try {
@@ -83,19 +90,24 @@ class OrderCubit extends Cubit<OrderState> {
           orders = OrderList.fromJson(data);
 
           if (orders?.orders == null || orders!.orders!.isEmpty) {
+            if (isClosed) return;
             emit(OrderListEmpty());
           } else {
+            if (isClosed) return;
             emit(OrderListSuccess());
           }
         } else {
+          if (isClosed) return;
           emit(OrderError(message: 'No data received'));
         }
       } else {
+        if (isClosed) return;
         emit(OrderError(
           message: 'Failed to load orders: ${response.statusCode}',
         ));
       }
     } catch (error) {
+      if (isClosed) return;
       final errorMessage = ErrorHandler.handleError(error);
       emit(OrderError(message: errorMessage));
     }
@@ -103,6 +115,7 @@ class OrderCubit extends Cubit<OrderState> {
 
   // Get order item details by order ID
   Future<void> getOrderItem({required int orderId}) async {
+    if (isClosed) return;
     emit(OrderLoading());
 
     try {
@@ -117,16 +130,20 @@ class OrderCubit extends Cubit<OrderState> {
 
         if (data != null) {
           orderItem = OrderItemModel.fromJson(data);
+          if (isClosed) return;
           emit(OrderSuccess());
         } else {
+          if (isClosed) return;
           emit(OrderError(message: 'No data received'));
         }
       } else {
+        if (isClosed) return;
         emit(OrderError(
           message: 'Failed to load order details: ${response.statusCode}',
         ));
       }
     } catch (error) {
+      if (isClosed) return;
       final errorMessage = ErrorHandler.handleError(error);
       emit(OrderError(message: errorMessage));
     }
@@ -134,6 +151,7 @@ class OrderCubit extends Cubit<OrderState> {
 
   // Get order invoice by order ID
   Future<void> getOrderInvoice({required int orderId}) async {
+    if (isClosed) return;
     emit(OrderInvoiceLoading());
 
     try {
@@ -148,16 +166,20 @@ class OrderCubit extends Cubit<OrderState> {
 
         if (data != null) {
           invoice = InvoiceModel.fromJson(data);
+          if (isClosed) return;
           emit(OrderInvoiceSuccess());
         } else {
+          if (isClosed) return;
           emit(OrderError(message: 'No invoice data received'));
         }
       } else {
+        if (isClosed) return;
         emit(OrderError(
           message: 'Failed to load invoice: ${response.statusCode}',
         ));
       }
     } catch (error) {
+      if (isClosed) return;
       final errorMessage = ErrorHandler.handleError(error);
       emit(OrderError(message: errorMessage));
     }
@@ -165,6 +187,7 @@ class OrderCubit extends Cubit<OrderState> {
 
   // Reset state
   void resetState() {
+    if (isClosed) return;
     emit(OrderInitial());
   }
 
@@ -174,6 +197,7 @@ class OrderCubit extends Cubit<OrderState> {
     orders = null;
     orderItem = null;
     invoice = null;
+    if (isClosed) return;
     emit(OrderInitial());
   }
 

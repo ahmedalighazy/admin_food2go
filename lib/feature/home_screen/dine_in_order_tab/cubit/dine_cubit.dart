@@ -3,10 +3,14 @@ import 'package:admin_food2go/core/services/dio_helper.dart';
 import 'package:admin_food2go/core/utils/error_handler.dart';
 import '../model/branch_model.dart';
 import '../model/dine_model.dart';
+import 'dart:developer';
+import 'package:admin_food2go/core/services/role_manager.dart';
 import 'dine_state.dart';
 
 class DineCubit extends Cubit<DineState> {
-  DineCubit() : super(DineInitial());
+  DineCubit() : super(DineInitial()) {
+    _initializeBasedOnRole();
+  }
 
   static DineCubit get(context) => BlocProvider.of(context);
 
@@ -18,6 +22,20 @@ class DineCubit extends Cubit<DineState> {
   BranchModel? branchModel;
   List<Branches>? branches;
   Branches? selectedBranch;
+
+  void _initializeBasedOnRole() {
+    final directRole = RoleManager.getDirectRole();
+    if (directRole == 'branch') {
+      final branchId = RoleManager.getCurrentBranchId();
+      if (branchId != null) {
+        // For branch role, load only current branch
+        getDineOrders(branchId: branchId.toInt());
+      }
+    } else {
+      // For admin, load all branches
+      getAllBranches();
+    }
+  }
 
   /// Fetch Dine-In Orders by Branch ID
   Future<void> getDineOrders({required int branchId}) async {
@@ -103,8 +121,13 @@ class DineCubit extends Cubit<DineState> {
     return tables!.where((table) => !occupiedTableIds.contains(table.id)).toList();
   }
 
-  /// Fetch All Branches Orders (for "All" option)
+  /// Fetch All Branches Orders (for "All" option) - Only for admin
   Future<void> loadAllBranchesOrders() async {
+    if (RoleManager.getDirectRole() != 'admin') {
+      log('⚠️ All branches orders only available for admin');
+      return;
+    }
+
     emit(DineLoading());
 
     try {
@@ -154,6 +177,7 @@ class DineCubit extends Cubit<DineState> {
       emit(DineError(errorMessage));
     }
   }
+
   double getTotalAmount() {
     if (orders == null) return 0.0;
 
