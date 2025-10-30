@@ -20,7 +20,6 @@ class OrderTab extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: _buildAppBar(context),
-        // drawer: _buildDrawer(context),
         body: BlocConsumer<OrderCubit, OrderState>(
           listener: (context, state) {
             if (state is OrderError) {
@@ -233,12 +232,6 @@ class OrderTab extends StatelessWidget {
     return AppBar(
       elevation: 0,
       backgroundColor: AppColors.colorPrimary,
-      // leading: Builder(
-      //   builder: (context) => IconButton(
-      //     icon: const Icon(Icons.menu, color: Colors.white),
-      //     onPressed: () => Scaffold.of(context).openDrawer(),
-      //   ),
-      // ),
       title: const Text(
         'Orders',
         style: TextStyle(
@@ -256,100 +249,6 @@ class OrderTab extends StatelessWidget {
       ],
     );
   }
-
-  // Widget _buildDrawer(BuildContext context) {
-  //   return Drawer(
-  //     child: Column(
-  //       children: [
-  //         Container(
-  //           width: double.infinity,
-  //           padding: EdgeInsets.only(
-  //             top: MediaQuery.of(context).padding.top + 20,
-  //             bottom: 20,
-  //             left: 20,
-  //             right: 20,
-  //           ),
-  //           decoration: BoxDecoration(
-  //             gradient: LinearGradient(
-  //               colors: [AppColors.colorPrimary, AppColors.colorPrimary],
-  //               begin: Alignment.topLeft,
-  //               end: Alignment.bottomRight,
-  //             ),
-  //           ),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               const SizedBox(height: 16),
-  //               const Text(
-  //                 'Order List',
-  //                 style: TextStyle(
-  //                   color: Colors.white,
-  //                   fontSize: 20,
-  //                   fontWeight: FontWeight.bold,
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //         Expanded(
-  //           child: ListView(
-  //             padding: EdgeInsets.zero,
-  //             children: [
-  //               _buildDrawerItem(
-  //                 context,
-  //                 icon: Icons.shopping_cart,
-  //                 title: 'All Orders',
-  //                 isSelected: false,
-  //                 onTap: () {
-  //                   Navigator.pop(context); // Close drawer first
-  //                   Navigator.push(
-  //                     context,
-  //                     MaterialPageRoute(
-  //                       builder: (context) => BlocProvider(
-  //                         create: (context) => OrderCubit(),
-  //                         child: const OrderListScreen(),
-  //                       ),
-  //                     ),
-  //                   );
-  //                 },
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-  //
-  // Widget _buildDrawerItem(
-  //     BuildContext context, {
-  //       required IconData icon,
-  //       required String title,
-  //       required VoidCallback onTap,
-  //       bool isSelected = false,
-  //       Color? iconColor,
-  //     }) {
-  //   return ListTile(
-  //     leading: Icon(
-  //       icon,
-  //       color: isSelected
-  //           ? AppColors.colorPrimary
-  //           : (iconColor ?? Colors.grey[700]),
-  //     ),
-  //     title: Text(
-  //       title,
-  //       style: TextStyle(
-  //         color: isSelected ? AppColors.colorPrimary : Colors.grey[800],
-  //         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-  //         fontSize: 16,
-  //       ),
-  //     ),
-  //     selected: isSelected,
-  //     selectedTileColor: AppColors.colorPrimary.withOpacity(0.1),
-  //     onTap: onTap,
-  //     contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-  //   );
-  // }
 
   Widget _buildHeaderCard(BuildContext context, num totalOrders) {
     return Container(

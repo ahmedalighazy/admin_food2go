@@ -1,6 +1,7 @@
 class OrderList {
   OrderList({
-      this.orders,});
+    this.orders,
+  });
 
   OrderList.fromJson(dynamic json) {
     if (json['orders'] != null) {
@@ -10,6 +11,7 @@ class OrderList {
       });
     }
   }
+
   List<Orders>? orders;
 
   Map<String, dynamic> toJson() {
@@ -19,29 +21,29 @@ class OrderList {
     }
     return map;
   }
-
 }
 
 class Orders {
   Orders({
-      this.id, 
-      this.orderNumber, 
-      this.createdAt, 
-      this.amount, 
-      this.operationStatus, 
-      this.orderStatus, 
-      this.source, 
-      this.status, 
-      this.points, 
-      this.rejectedReason, 
-      this.transactionId, 
-      this.user, 
-      this.branch, 
-      this.address, 
-      this.admin, 
-      this.paymentMethod, 
-      this.schedule, 
-      this.delivery,});
+    this.id,
+    this.orderNumber,
+    this.createdAt,
+    this.amount,
+    this.operationStatus,
+    this.orderStatus,
+    this.source,
+    this.status,
+    this.points,
+    this.rejectedReason,
+    this.transactionId,
+    this.user,
+    this.branch,
+    this.address,
+    this.admin,
+    this.paymentMethod,
+    this.schedule,
+    this.delivery,
+  });
 
   Orders.fromJson(dynamic json) {
     id = json['id'];
@@ -63,6 +65,7 @@ class Orders {
     schedule = json['schedule'] != null ? Schedule.fromJson(json['schedule']) : null;
     delivery = json['delivery'] != null ? Delivery.fromJson(json['delivery']) : null;
   }
+
   num? id;
   String? orderNumber;
   String? createdAt;
@@ -118,16 +121,17 @@ class Orders {
     }
     return map;
   }
-
 }
 
 class Delivery {
   Delivery({
-      this.name,});
+    this.name,
+  });
 
   Delivery.fromJson(dynamic json) {
     name = json['name'];
   }
+
   dynamic name;
 
   Map<String, dynamic> toJson() {
@@ -135,16 +139,17 @@ class Delivery {
     map['name'] = name;
     return map;
   }
-
 }
 
 class Schedule {
   Schedule({
-      this.name,});
+    this.name,
+  });
 
   Schedule.fromJson(dynamic json) {
     name = json['name'];
   }
+
   String? name;
 
   Map<String, dynamic> toJson() {
@@ -152,16 +157,17 @@ class Schedule {
     map['name'] = name;
     return map;
   }
-
 }
 
 class PaymentMethod {
   PaymentMethod({
-      this.name,});
+    this.name,
+  });
 
   PaymentMethod.fromJson(dynamic json) {
     name = json['name'];
   }
+
   String? name;
 
   Map<String, dynamic> toJson() {
@@ -169,16 +175,17 @@ class PaymentMethod {
     map['name'] = name;
     return map;
   }
-
 }
 
 class Admin {
   Admin({
-      this.name,});
+    this.name,
+  });
 
   Admin.fromJson(dynamic json) {
     name = json['name'];
   }
+
   dynamic name;
 
   Map<String, dynamic> toJson() {
@@ -186,16 +193,17 @@ class Admin {
     map['name'] = name;
     return map;
   }
-
 }
 
 class Address {
   Address({
-      this.zone,});
+    this.zone,
+  });
 
   Address.fromJson(dynamic json) {
     zone = json['zone'] != null ? Zone.fromJson(json['zone']) : null;
   }
+
   Zone? zone;
 
   Map<String, dynamic> toJson() {
@@ -205,16 +213,17 @@ class Address {
     }
     return map;
   }
-
 }
 
 class Zone {
   Zone({
-      this.zone,});
+    this.zone,
+  });
 
   Zone.fromJson(dynamic json) {
     zone = json['zone'];
   }
+
   String? zone;
 
   Map<String, dynamic> toJson() {
@@ -222,16 +231,17 @@ class Zone {
     map['zone'] = zone;
     return map;
   }
-
 }
 
 class Branch {
   Branch({
-      this.name,});
+    this.name,
+  });
 
   Branch.fromJson(dynamic json) {
     name = json['name'];
   }
+
   String? name;
 
   Map<String, dynamic> toJson() {
@@ -239,20 +249,21 @@ class Branch {
     map['name'] = name;
     return map;
   }
-
 }
 
 class User {
   User({
-      this.fName, 
-      this.lName, 
-      this.phone,});
+    this.fName,
+    this.lName,
+    this.phone,
+  });
 
   User.fromJson(dynamic json) {
     fName = json['f_name'];
     lName = json['l_name'];
     phone = json['phone'];
   }
+
   String? fName;
   String? lName;
   String? phone;
@@ -264,5 +275,4 @@ class User {
     map['phone'] = phone;
     return map;
   }
-
 }

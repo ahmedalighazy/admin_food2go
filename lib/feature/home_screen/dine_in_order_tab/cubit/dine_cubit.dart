@@ -1,3 +1,4 @@
+// dine_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_food2go/core/services/dio_helper.dart';
 import 'package:admin_food2go/core/utils/error_handler.dart';
@@ -27,9 +28,10 @@ class DineCubit extends Cubit<DineState> {
     final directRole = RoleManager.getDirectRole();
     if (directRole == 'branch') {
       final branchId = RoleManager.getCurrentBranchId();
-      if (branchId != null) {
-        // For branch role, load only current branch
+      if (branchId != null && branchId > 0) {  // FIXED: Validation for valid branch ID
         getDineOrders(branchId: branchId.toInt());
+      } else {
+        emit(DineError('No valid branch assigned. Contact admin.'));
       }
     } else {
       // For admin, load all branches
@@ -39,6 +41,11 @@ class DineCubit extends Cubit<DineState> {
 
   /// Fetch Dine-In Orders by Branch ID
   Future<void> getDineOrders({required int branchId}) async {
+    if (branchId <= 0) {  // FIXED: Validation to prevent invalid API calls
+      emit(DineError('Invalid branch ID: $branchId. Please select a valid branch.'));
+      return;
+    }
+
     emit(DineLoading());
 
     try {
@@ -140,7 +147,7 @@ class DineCubit extends Cubit<DineState> {
 
       // Loop through all branches and get their orders
       for (var branch in branches ?? []) {
-        if (branch.id != null) {
+        if (branch.id != null && branch.id! > 0) {  // FIXED: Skip invalid branch IDs
           try {
             final response = await DioHelper.getData(
               url: 'admin/pos/order/pos_orders',
@@ -186,6 +193,10 @@ class DineCubit extends Cubit<DineState> {
 
   /// Refresh Data
   Future<void> refreshData({required int branchId}) async {
+    if (branchId <= 0) {  // FIXED: Validation to prevent invalid refresh
+      emit(DineError('Cannot refresh: Invalid branch ID.'));
+      return;
+    }
     await getDineOrders(branchId: branchId);
   }
 

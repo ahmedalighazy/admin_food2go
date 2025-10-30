@@ -101,6 +101,7 @@ class OrderCubit extends Cubit<OrderState> {
     } catch (error) {
       if (isClosed) return;
       final errorMessage = ErrorHandler.handleError(error);
+      emit(OrderError(message: errorMessage));
       if (error is DioException && error.response?.statusCode == 404) {
         emit(OrderError(message: 'Endpoint not found. Check server routes for orders list.'));
       } else {

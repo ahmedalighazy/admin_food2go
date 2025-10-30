@@ -612,7 +612,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     );
   }
 
-
   Widget _buildScheduleCard(Schedule schedule) {
     return Container(
       padding: const EdgeInsets.all(20),

@@ -3,8 +3,10 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer';
 import '../../../../core/constants/app_colors.dart';
+import '../../home_screen.dart';
 import '../../../../core/utils/responsive_ui.dart';
 import '../../../../core/services/notification_storage_service.dart';
+import 'package:admin_food2go/feature/home_screen/order_tab/view/order_details_screen.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -258,7 +260,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
           child: InkWell(
             borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 16)),
             onTap: () {
-              _showNotificationDetails(notification);
+              // ⭐ عند الضغط، قم بتحديث القراءة وتنقل بناءً على النوع
+              final notificationService = context.read<NotificationService>();
+              if (!notification.isRead) {
+                notificationService.markAsRead(notification.id);
+              }
+              _handleNotificationTap(notification); // دالة جديدة للتنقل
             },
             child: Padding(
               padding: EdgeInsets.all(ResponsiveUI.padding(context, 16)),
@@ -346,6 +353,31 @@ class _NotificationScreenState extends State<NotificationScreen> {
         ),
       ),
     );
+  }
+
+  // ⭐ دالة محدثة للتعامل مع الضغط على الإشعار - الآن تنقل مباشرة إلى تفاصيل الطلب
+  void _handleNotificationTap(NotificationItem notification) {
+    final type = notification.data['type']?.toString().toLowerCase() ?? 'general';
+    final orderIdStr = notification.data['order_id'];
+
+    if (type == 'order' && orderIdStr != null) {
+      final orderId = int.tryParse(orderIdStr.toString());
+      if (orderId != null) {
+        // تنقل مباشر إلى شاشة تفاصيل الطلب
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => OrderDetailsScreen(orderId: orderId),
+          ),
+        );
+        log('📱 Navigated directly to Order Details with ID: $orderId');
+      } else {
+        log('❌ Invalid order ID: $orderIdStr');
+        _showNotificationDetails(notification);
+      }
+    } else {
+      // للإشعارات الأخرى، عرض التفاصيل في bottom sheet
+      _showNotificationDetails(notification);
+    }
   }
 
   IconData _getNotificationIcon(Map<String, dynamic> data) {
