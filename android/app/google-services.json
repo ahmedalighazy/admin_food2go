@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "191292342718",
+    "project_id": "food2go-8676e",
+    "storage_bucket": "food2go-8676e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:191292342718:android:383cd678217426a6aef9ef",
+        "android_client_info": {
+          "package_name": "com.captainorder.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2wem9KvYp-Wm7pgpYgkT4HjBi0aHAd3w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:191292342718:android:82f28099c2f9f818aef9ef",
+        "android_client_info": {
+          "package_name": "com.example.admin_food2go"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2wem9KvYp-Wm7pgpYgkT4HjBi0aHAd3w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

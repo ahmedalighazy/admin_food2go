@@ -8,6 +8,7 @@ class CacheHelper {
   // Initialize SharedPreferences
   static Future<void> init() async {
     sharedPreferences = await SharedPreferences.getInstance();
+    log('✅ CacheHelper initialized');
   }
 
   // Save primitive data
@@ -15,16 +16,21 @@ class CacheHelper {
     required String key,
     required dynamic value,
   }) async {
-    if (value is String) {
-      return await sharedPreferences!.setString(key, value);
-    } else if (value is int) {
-      return await sharedPreferences!.setInt(key, value);
-    } else if (value is bool) {
-      return await sharedPreferences!.setBool(key, value);
-    } else if (value is double) {
-      return await sharedPreferences!.setDouble(key, value);
+    try {
+      if (value is String) {
+        return await sharedPreferences!.setString(key, value);
+      } else if (value is int) {
+        return await sharedPreferences!.setInt(key, value);
+      } else if (value is bool) {
+        return await sharedPreferences!.setBool(key, value);
+      } else if (value is double) {
+        return await sharedPreferences!.setDouble(key, value);
+      }
+      return false;
+    } catch (e) {
+      log('❌ Error saving data for key $key: $e');
+      return false;
     }
-    return false;
   }
 
   // Save model as JSON
@@ -33,15 +39,34 @@ class CacheHelper {
     required T model,
     required Map<String, dynamic> Function(T) toJson,
   }) async {
-    final jsonMap = toJson(model);
-    final jsonString = jsonEncode(jsonMap);
-    return await sharedPreferences!.setString(key, jsonString);
+    try {
+      final jsonMap = toJson(model);
+      final jsonString = jsonEncode(jsonMap);
+      return await sharedPreferences!.setString(key, jsonString);
+    } catch (e) {
+      log('❌ Error saving model for key $key: $e');
+      return false;
+    }
   }
 
-  // Get primitive data
-  static String? getData({required String key}) {
-    final value = sharedPreferences!.get(key);
-    return value != null ? value.toString() : null;
+  // Get primitive data - Returns the actual type
+  static dynamic getData({required String key}) {
+    try {
+      return sharedPreferences!.get(key);
+    } catch (e) {
+      log('❌ Error getting data for key $key: $e');
+      return null;
+    }
+  }
+
+  // Get String data specifically
+  static String? getString({required String key}) {
+    try {
+      return sharedPreferences!.getString(key);
+    } catch (e) {
+      log('❌ Error getting string for key $key: $e');
+      return null;
+    }
   }
 
   // Get model from JSON
@@ -49,14 +74,14 @@ class CacheHelper {
     required String key,
     required T Function(Map<String, dynamic>) fromJson,
   }) {
-    final jsonString = sharedPreferences!.getString(key);
-    if (jsonString == null) return null;
     try {
+      final jsonString = sharedPreferences!.getString(key);
+      if (jsonString == null) return null;
+
       final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
       return fromJson(jsonMap);
     } catch (e) {
-      // Log the error and clear invalid cache
-      log('Cache deserialization error for key $key: $e');
+      log('❌ Cache deserialization error for key $key: $e');
       sharedPreferences!.remove(key);
       return null;
     }
@@ -64,16 +89,31 @@ class CacheHelper {
 
   // Remove specific data
   static Future<bool> removeData({required String key}) async {
-    return await sharedPreferences!.remove(key);
+    try {
+      return await sharedPreferences!.remove(key);
+    } catch (e) {
+      log('❌ Error removing data for key $key: $e');
+      return false;
+    }
   }
 
   // Clear all data
   static Future<bool> clearAllData() async {
-    return await sharedPreferences!.clear();
+    try {
+      return await sharedPreferences!.clear();
+    } catch (e) {
+      log('❌ Error clearing all data: $e');
+      return false;
+    }
   }
 
   // Check if key exists
   static bool containsKey({required String key}) {
-    return sharedPreferences!.containsKey(key);
+    try {
+      return sharedPreferences!.containsKey(key);
+    } catch (e) {
+      log('❌ Error checking key existence for $key: $e');
+      return false;
+    }
   }
 }

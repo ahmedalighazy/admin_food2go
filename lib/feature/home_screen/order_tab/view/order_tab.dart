@@ -6,6 +6,7 @@ import '../../../../core/utils/responsive_ui.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/error_widget.dart';
 import '../../../../core/widgets/shimmer_widgets.dart';
+import '../../notifacation/view/NotificationBellIcon.dart';
 import '../cubit/order_cubit.dart';
 import '../cubit/order_state.dart';
 
@@ -19,7 +20,7 @@ class OrderTab extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: _buildAppBar(context),
-        drawer: _buildDrawer(context),
+        // drawer: _buildDrawer(context),
         body: BlocConsumer<OrderCubit, OrderState>(
           listener: (context, state) {
             if (state is OrderError) {
@@ -63,11 +64,9 @@ class OrderTab extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header with total orders
                       _buildHeaderCard(context, orderList.orders ?? 0),
                       SizedBox(height: ResponsiveUI.spacing(context, 16)),
 
-                      // Date Range if available
                       if (orderList.start != null && orderList.end != null)
                         _buildDateRangeCard(
                           context,
@@ -77,7 +76,6 @@ class OrderTab extends StatelessWidget {
 
                       SizedBox(height: ResponsiveUI.spacing(context, 20)),
 
-                      // Main Status Cards Grid
                       Text(
                         'Order Status Overview',
                         style: TextStyle(
@@ -99,6 +97,7 @@ class OrderTab extends StatelessWidget {
                           _buildStatusCard(
                             context,
                             'Pending',
+                            'pending',
                             orderList.pending ?? 0,
                             Icons.schedule,
                             AppColors.colorPrimary,
@@ -106,6 +105,7 @@ class OrderTab extends StatelessWidget {
                           _buildStatusCard(
                             context,
                             'Confirmed',
+                            'confirmed',
                             orderList.confirmed ?? 0,
                             Icons.check_circle_outline,
                             AppColors.colorPrimary,
@@ -113,6 +113,7 @@ class OrderTab extends StatelessWidget {
                           _buildStatusCard(
                             context,
                             'Processing',
+                            'processing',
                             orderList.processing ?? 0,
                             Icons.kitchen,
                             AppColors.colorPrimary,
@@ -120,6 +121,7 @@ class OrderTab extends StatelessWidget {
                           _buildStatusCard(
                             context,
                             'Out for Delivery',
+                            'out_for_delivery',
                             orderList.outForDelivery ?? 0,
                             Icons.delivery_dining,
                             AppColors.colorPrimary,
@@ -127,6 +129,7 @@ class OrderTab extends StatelessWidget {
                           _buildStatusCard(
                             context,
                             'Delivered',
+                            'delivered',
                             orderList.delivered ?? 0,
                             Icons.done_all,
                             AppColors.colorPrimary,
@@ -134,6 +137,7 @@ class OrderTab extends StatelessWidget {
                           _buildStatusCard(
                             context,
                             'Scheduled',
+                            'scheduled',
                             orderList.scheduled ?? 0,
                             Icons.event,
                             AppColors.colorPrimary,
@@ -143,7 +147,6 @@ class OrderTab extends StatelessWidget {
 
                       SizedBox(height: ResponsiveUI.spacing(context, 20)),
 
-                      // Issues Section
                       Text(
                         'Issues & Returns',
                         style: TextStyle(
@@ -160,6 +163,7 @@ class OrderTab extends StatelessWidget {
                             child: _buildStatusCard(
                               context,
                               'Returned',
+                              'returned',
                               orderList.returned ?? 0,
                               Icons.assignment_return,
                               AppColors.colorPrimary,
@@ -170,6 +174,7 @@ class OrderTab extends StatelessWidget {
                             child: _buildStatusCard(
                               context,
                               'Failed',
+                              'failed_to_deliver',
                               orderList.faildToDeliver ?? 0,
                               Icons.error_outline,
                               AppColors.colorPrimary,
@@ -186,6 +191,7 @@ class OrderTab extends StatelessWidget {
                             child: _buildStatusCard(
                               context,
                               'Refund',
+                              'refund',
                               orderList.refund ?? 0,
                               Icons.money_off,
                               AppColors.colorPrimary,
@@ -196,6 +202,7 @@ class OrderTab extends StatelessWidget {
                             child: _buildStatusCard(
                               context,
                               'Canceled',
+                              'canceled',
                               orderList.canceled ?? 0,
                               Icons.cancel,
                               AppColors.colorPrimary,
@@ -226,12 +233,12 @@ class OrderTab extends StatelessWidget {
     return AppBar(
       elevation: 0,
       backgroundColor: AppColors.colorPrimary,
-      leading: Builder(
-        builder: (context) => IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
-      ),
+      // leading: Builder(
+      //   builder: (context) => IconButton(
+      //     icon: const Icon(Icons.menu, color: Colors.white),
+      //     onPressed: () => Scaffold.of(context).openDrawer(),
+      //   ),
+      // ),
       title: const Text(
         'Orders',
         style: TextStyle(
@@ -241,127 +248,108 @@ class OrderTab extends StatelessWidget {
         ),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-          onPressed: () {
-            // Navigate to notifications
-          },
+        const SizedBox(
+          width: 48,
+          height: 48,
+          child: NotificationBellIcon(),
         ),
       ],
     );
   }
 
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: Column(
-        children: [
-          // Drawer Header
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 20,
-              bottom: 20,
-              left: 20,
-              right: 20,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.colorPrimary, AppColors.colorPrimary],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                const Text(
-                  'Order List',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Drawer Items
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                _buildDrawerItem(
-                  context,
-                  icon: Icons.shopping_cart,
-                  title: 'Orders',
-                  isSelected: true,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => OrderListScreen()));
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        required VoidCallback onTap,
-        bool isSelected = false,
-        Color? iconColor,
-      }) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isSelected
-            ? AppColors.colorPrimary
-            : (iconColor ?? Colors.grey[700]),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: isSelected ? AppColors.colorPrimary : Colors.grey[800],
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          fontSize: 16,
-        ),
-      ),
-      selected: isSelected,
-      selectedTileColor: AppColors.colorPrimary.withOpacity(0.1),
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Perform logout
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.colorPrimary),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildDrawer(BuildContext context) {
+  //   return Drawer(
+  //     child: Column(
+  //       children: [
+  //         Container(
+  //           width: double.infinity,
+  //           padding: EdgeInsets.only(
+  //             top: MediaQuery.of(context).padding.top + 20,
+  //             bottom: 20,
+  //             left: 20,
+  //             right: 20,
+  //           ),
+  //           decoration: BoxDecoration(
+  //             gradient: LinearGradient(
+  //               colors: [AppColors.colorPrimary, AppColors.colorPrimary],
+  //               begin: Alignment.topLeft,
+  //               end: Alignment.bottomRight,
+  //             ),
+  //           ),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               const SizedBox(height: 16),
+  //               const Text(
+  //                 'Order List',
+  //                 style: TextStyle(
+  //                   color: Colors.white,
+  //                   fontSize: 20,
+  //                   fontWeight: FontWeight.bold,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //         Expanded(
+  //           child: ListView(
+  //             padding: EdgeInsets.zero,
+  //             children: [
+  //               _buildDrawerItem(
+  //                 context,
+  //                 icon: Icons.shopping_cart,
+  //                 title: 'All Orders',
+  //                 isSelected: false,
+  //                 onTap: () {
+  //                   Navigator.pop(context); // Close drawer first
+  //                   Navigator.push(
+  //                     context,
+  //                     MaterialPageRoute(
+  //                       builder: (context) => BlocProvider(
+  //                         create: (context) => OrderCubit(),
+  //                         child: const OrderListScreen(),
+  //                       ),
+  //                     ),
+  //                   );
+  //                 },
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+  //
+  // Widget _buildDrawerItem(
+  //     BuildContext context, {
+  //       required IconData icon,
+  //       required String title,
+  //       required VoidCallback onTap,
+  //       bool isSelected = false,
+  //       Color? iconColor,
+  //     }) {
+  //   return ListTile(
+  //     leading: Icon(
+  //       icon,
+  //       color: isSelected
+  //           ? AppColors.colorPrimary
+  //           : (iconColor ?? Colors.grey[700]),
+  //     ),
+  //     title: Text(
+  //       title,
+  //       style: TextStyle(
+  //         color: isSelected ? AppColors.colorPrimary : Colors.grey[800],
+  //         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+  //         fontSize: 16,
+  //       ),
+  //     ),
+  //     selected: isSelected,
+  //     selectedTileColor: AppColors.colorPrimary.withOpacity(0.1),
+  //     onTap: onTap,
+  //     contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+  //   );
+  // }
 
   Widget _buildHeaderCard(BuildContext context, num totalOrders) {
     return Container(
@@ -482,63 +470,79 @@ class OrderTab extends StatelessWidget {
   Widget _buildStatusCard(
       BuildContext context,
       String title,
+      String statusValue,
       num count,
       IconData icon,
       Color color,
       ) {
-    return Container(
-      padding: EdgeInsets.all(ResponsiveUI.padding(context, 12)),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(
-          ResponsiveUI.borderRadius(context, 16),
+    return InkWell(
+      onTap: () {
+        // Navigate to OrderListScreen with the specific status
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BlocProvider(
+              create: (context) => OrderCubit(),
+              child: OrderListScreen(orderStatus: statusValue),
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 16)),
+      child: Container(
+        padding: EdgeInsets.all(ResponsiveUI.padding(context, 12)),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(
+            ResponsiveUI.borderRadius(context, 16),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.shade200,
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade200,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: EdgeInsets.all(ResponsiveUI.padding(context, 10)),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.all(ResponsiveUI.padding(context, 10)),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: ResponsiveUI.iconSize(context, 24),
+              ),
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: ResponsiveUI.iconSize(context, 24),
+            SizedBox(height: ResponsiveUI.spacing(context, 8)),
+            Text(
+              '$count',
+              style: TextStyle(
+                fontSize: ResponsiveUI.fontSize(context, 20),
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
-          ),
-          SizedBox(height: ResponsiveUI.spacing(context, 8)),
-          Text(
-            '$count',
-            style: TextStyle(
-              fontSize: ResponsiveUI.fontSize(context, 20),
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+            SizedBox(height: ResponsiveUI.spacing(context, 4)),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: ResponsiveUI.fontSize(context, 11),
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-          ),
-          SizedBox(height: ResponsiveUI.spacing(context, 4)),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: ResponsiveUI.fontSize(context, 11),
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

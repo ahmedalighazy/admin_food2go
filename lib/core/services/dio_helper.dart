@@ -1,14 +1,14 @@
 import 'dart:developer';
+import 'package:admin_food2go/core/services/cache_helper.dart.dart' show CacheHelper;
 import 'package:admin_food2go/core/services/session_helper.dart';
 import 'package:dio/dio.dart';
-import 'cache_helper.dart.dart';
 
 class DioHelper {
   static late Dio dio;
 
   static void init() {
     // Get base URL from cache or use default
-    final String baseUrl = CacheHelper.getData(key: 'base_url') ??
+    final String baseUrl = CacheHelper.getString(key: 'base_url') ??
         'https://bcknd.food2go.online/';
 
     dio = Dio(
@@ -25,7 +25,7 @@ class DioHelper {
       InterceptorsWrapper(
         onError: (DioException e, handler) async {
           if (e.response?.statusCode == 401) {
-            print('🚨 Unauthorized — broadcasting sessionExpired');
+            log('🚨 Unauthorized — broadcasting sessionExpired');
             await CacheHelper.clearAllData();
             SessionManager.notifySessionExpired();
           }
@@ -53,13 +53,14 @@ class DioHelper {
     required String url,
     Map<String, dynamic>? query,
     String? lang = 'en',
-    String? token,
   }) async {
-    final String? token = CacheHelper.getData(key: 'token');
+    // ✅ Fixed: Get token once at the start
+    final String? authToken = CacheHelper.getString(key: 'token');
 
     dio.options.headers = {
       'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
+      if (authToken != null && authToken.isNotEmpty)
+        'Authorization': 'Bearer $authToken',
     };
 
     // Convert query parameters to String values
@@ -79,15 +80,16 @@ class DioHelper {
     required dynamic data,
     required String url,
     Map<String, dynamic>? query,
-    String? token,
   }) async {
-    final String? token = CacheHelper.getData(key: 'token');
+    // ✅ Fixed: Get token once at the start
+    final String? authToken = CacheHelper.getString(key: 'token');
 
     dio.options.headers = {
       'Content-Type': data is FormData
           ? 'multipart/form-data'
           : 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
+      if (authToken != null && authToken.isNotEmpty)
+        'Authorization': 'Bearer $authToken',
     };
 
     // Convert query parameters to String values
@@ -127,18 +129,19 @@ class DioHelper {
     required String url,
     Map<String, dynamic>? data,
     Map<String, dynamic>? query,
-    String? token,
     String lang = 'en',
     bool isFormData = false,
   }) async {
-    final String? token = CacheHelper.getData(key: 'token');
+    // ✅ Fixed: Get token once at the start
+    final String? authToken = CacheHelper.getString(key: 'token');
 
     dio.options.headers = {
       'Content-Type': isFormData
           ? 'application/x-www-form-urlencoded'
           : 'application/json',
       'lang': lang,
-      if (token != null) 'Authorization': 'Bearer $token',
+      if (authToken != null && authToken.isNotEmpty)
+        'Authorization': 'Bearer $authToken',
     };
 
     // Convert query parameters to String values
@@ -157,13 +160,14 @@ class DioHelper {
     Map<String, dynamic>? query,
     required String url,
     Map<String, dynamic>? data,
-    String? token,
   }) async {
-    final String? token = CacheHelper.getData(key: 'token');
+    // ✅ Fixed: Get token once at the start
+    final String? authToken = CacheHelper.getString(key: 'token');
 
     dio.options.headers = {
       'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
+      if (authToken != null && authToken.isNotEmpty)
+        'Authorization': 'Bearer $authToken',
     };
 
     // Convert query parameters to String values
@@ -182,13 +186,14 @@ class DioHelper {
   static Future<Response> deleteData({
     required String url,
     Map<String, dynamic>? query,
-    String? token,
   }) async {
-    final String? token = CacheHelper.getData(key: 'token');
+    // ✅ Fixed: Get token once at the start
+    final String? authToken = CacheHelper.getString(key: 'token');
 
     dio.options.headers = {
       'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
+      if (authToken != null && authToken.isNotEmpty)
+        'Authorization': 'Bearer $authToken',
     };
 
     // Convert query parameters to String values

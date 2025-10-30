@@ -17,7 +17,9 @@ class DineInOrderTab extends StatefulWidget {
 
 class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProviderStateMixin {
   String selectedFilter = 'All';
+  String searchQuery = ''; // Search query variable
   late TabController _tabController;
+  late TextEditingController _searchController; // Search controller
   final directRole = RoleManager.getDirectRole();
   bool isBranchRole = false;
   num? currentBranchId;
@@ -26,16 +28,22 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _searchController = TextEditingController(); // Initialize search controller
     isBranchRole = directRole == 'branch';
     if (isBranchRole) {
       currentBranchId = RoleManager.getCurrentBranchId();
+      // Directly load branch-specific data instead of all branches
+      DineCubit.get(context).getDineOrders(branchId: currentBranchId!.toInt());
+    } else {
+      // Only load branches for non-branch roles
+      DineCubit.get(context).getAllBranches();
     }
-    DineCubit.get(context).getAllBranches();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose(); // Dispose search controller
     super.dispose();
   }
 
@@ -53,7 +61,7 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
                   Expanded(
                     child: Text(
                       state.message,
-                      style: const TextStyle(fontSize: 14),
+                      style: TextStyle(fontSize: ResponsiveUI.fontSize(context, 14)),
                     ),
                   ),
                 ],
@@ -61,13 +69,13 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
               backgroundColor: Colors.red.shade700,
               behavior: SnackBarBehavior.fixed, // Changed from floating to fixed
               duration: const Duration(seconds: 4),
-              shape: const RoundedRectangleBorder(
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
+                  topLeft: Radius.circular(ResponsiveUI.borderRadius(context, 12)),
+                  topRight: Radius.circular(ResponsiveUI.borderRadius(context, 12)),
                 ),
               ),
-              margin: EdgeInsets.zero,
+              // Removed: margin: EdgeInsets.zero, // FIXED: Unsupported with fixed behavior
             ),
           );
         }
@@ -94,24 +102,29 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
               // Rest of content - Scrollable
               if (cubit.selectedBranch != null || isBranchRole)
                 Expanded(
-                  child: Column(
-                    children: [
-                      SizedBox(height: ResponsiveUI.spacing(context, 16)),
-                      _buildTabBar(),
-                      SizedBox(height: ResponsiveUI.spacing(context, 16)),
-                      _buildStatisticsCards(cubit),
-                      SizedBox(height: ResponsiveUI.spacing(context, 20)),
-                      Expanded(
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            _buildTablesTab(cubit, state),
-                            _buildOrdersTab(cubit, state),
-                            _buildCaptainOrdersTab(cubit, state),
-                          ],
+                  child: SingleChildScrollView(  // إضافة: لجعل كل المحتوى scrollable
+                    physics: const BouncingScrollPhysics(),  // تأثير scroll ناعم
+                    padding: EdgeInsets.only(bottom: ResponsiveUI.padding(context, 20)),  // padding أسفل للـ scroll
+                    child: Column(
+                      children: [
+                        SizedBox(height: ResponsiveUI.spacing(context, 16)),
+                        _buildTabBar(),
+                        SizedBox(height: ResponsiveUI.spacing(context, 16)),
+                        _buildStatisticsCards(cubit),
+                        SizedBox(height: ResponsiveUI.spacing(context, 20)),
+                        SizedBox(  // إضافة: container بارتفاع responsive للـ TabBarView
+                          height: MediaQuery.of(context).size.height * 0.6,  // 60% من ارتفاع الشاشة للـ tabs
+                          child: TabBarView(
+                            controller: _tabController,
+                            children: [
+                              _buildTablesTab(cubit, state),
+                              _buildOrdersTab(cubit, state),
+                              _buildCaptainOrdersTab(cubit, state),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
             ],
@@ -666,6 +679,8 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
 
     return RefreshIndicator(
       onRefresh: () async {
+        // Add a simple debounce to prevent spam calls
+        await Future.delayed(const Duration(milliseconds: 300));
         if (isBranchRole) {
           await cubit.refreshData(branchId: currentBranchId!.toInt());
         } else if (cubit.selectedBranch?.id == -1) {
@@ -922,13 +937,91 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
     );
   }
 
+  // Modified: _buildOrdersTab with Search Bar
   Widget _buildOrdersTab(DineCubit cubit, DineState state) {
     return Column(
       children: [
+        _buildSearchBar(), // Added: New Search Bar
+        SizedBox(height: ResponsiveUI.spacing(context, 12)),
         _buildFilterTabs(),
         SizedBox(height: ResponsiveUI.spacing(context, 16)),
         Expanded(child: _buildOrdersList(cubit, state)),
       ],
+    );
+  }
+
+  // Added: Search Bar Widget
+  Widget _buildSearchBar() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: ResponsiveUI.padding(context, 16)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 12)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) {
+          setState(() {
+            searchQuery = value.toLowerCase(); // Update search query
+          });
+        },
+        decoration: InputDecoration(
+          hintText: 'Search by order number...', // Changed to English
+          hintStyle: TextStyle(
+            color: Colors.grey.shade400,
+            fontSize: ResponsiveUI.fontSize(context, 14),
+          ),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            color: AppColors.colorPrimary,
+            size: ResponsiveUI.iconSize(context, 22),
+          ),
+          suffixIcon: searchQuery.isNotEmpty
+              ? IconButton(
+            icon: Icon(
+              Icons.clear_rounded,
+              color: Colors.grey.shade500,
+              size: ResponsiveUI.iconSize(context, 20),
+            ),
+            onPressed: () {
+              _searchController.clear();
+              setState(() {
+                searchQuery = '';
+              });
+            },
+          )
+              : null,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 12)),
+            borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 12)),
+            borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 12)),
+            borderSide: BorderSide(color: AppColors.colorPrimary, width: 2),
+          ),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: ResponsiveUI.padding(context, 16),
+            vertical: ResponsiveUI.padding(context, 16),
+          ),
+          fillColor: Colors.white,
+          filled: true,
+        ),
+        style: TextStyle(
+          fontSize: ResponsiveUI.fontSize(context, 14),
+          color: Colors.grey.shade800,
+        ),
+      ),
     );
   }
 
@@ -975,20 +1068,31 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
     );
   }
 
+  // Modified: _buildOrdersList with search filtering
   Widget _buildOrdersList(DineCubit cubit, DineState state) {
     if (state is DineLoading && cubit.orders == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final filteredOrders = selectedFilter == 'All'
+    // Filter by Status first
+    List<Orders> statusFilteredOrders = selectedFilter == 'All'
         ? cubit.orders ?? []
         : cubit.getOrdersByStatus(selectedFilter.toLowerCase());
 
+    // Added: Filter by search (on orderNumber)
+    List<Orders> filteredOrders = statusFilteredOrders.where((order) {
+      if (searchQuery.isEmpty) return true;
+      final orderNumber = order.orderNumber?.toLowerCase() ?? '';
+      return orderNumber.contains(searchQuery);
+    }).toList();
+
     if (filteredOrders.isEmpty) {
       return _buildEmptyState(
-        icon: Icons.inbox_rounded,
-        title: 'No Orders Found',
-        message: isBranchRole
+        icon: searchQuery.isNotEmpty ? Icons.search_off_rounded : Icons.inbox_rounded,
+        title: searchQuery.isNotEmpty ? 'No Results Found' : 'No Orders Found', // Changed to English
+        message: searchQuery.isNotEmpty
+            ? 'No orders match the search: "$searchQuery"' // Changed to English
+            : isBranchRole
             ? 'No orders found for your branch with the selected filters'
             : cubit.selectedBranch?.id == -1
             ? 'No orders found across all branches'
@@ -998,6 +1102,8 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
 
     return RefreshIndicator(
       onRefresh: () async {
+        // Add a simple debounce to prevent spam calls
+        await Future.delayed(const Duration(milliseconds: 300));
         if (isBranchRole) {
           await cubit.refreshData(branchId: currentBranchId!.toInt());
         } else if (cubit.selectedBranch?.id == -1) {
@@ -1117,7 +1223,7 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
                         child: _buildOrderInfoItem(
                           Icons.table_restaurant_rounded,
                           'Table',
-                          table?.tableNumber ?? 'N/A',
+                          table?.tableNumber ?? order.table?.toString() ?? 'N/A', // FIXED: Fallback to raw table ID
                           Colors.blue.shade600,
                         ),
                       ),
@@ -1398,6 +1504,8 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
 
     return RefreshIndicator(
       onRefresh: () async {
+        // Add a simple debounce to prevent spam calls
+        await Future.delayed(const Duration(milliseconds: 300));
         if (isBranchRole) {
           await cubit.refreshData(branchId: currentBranchId!.toInt());
         } else if (cubit.selectedBranch?.id == -1) {
@@ -1608,35 +1716,52 @@ class _DineInOrderTabState extends State<DineInOrderTab> with SingleTickerProvid
     return Center(
       child: Padding(
         padding: EdgeInsets.all(ResponsiveUI.padding(context, 32)),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: EdgeInsets.all(ResponsiveUI.padding(context, 32)),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.colorPrimaryLight.withOpacity(0.3), AppColors.colorPrimaryLight],
+        child: SingleChildScrollView(  // إضافة: للسماح بالتمرير في حال overflow
+          physics: const NeverScrollableScrollPhysics(),  // لا scroll إلا إذا لزم (للحفاظ على centering)
+          child: ConstrainedBox(  // إضافة: لضمان الحد الأدنى للارتفاع
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height * 0.4,  // ارتفاع أدنى responsive (40% من الشاشة)
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,  // تغيير: min بدلاً من max لتجنب التمدد الزائد
+              children: [
+                Container(
+                  padding: EdgeInsets.all(ResponsiveUI.padding(context, 24)),  // تقليل: من 32 إلى 24 للتوفير في المساحة
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [AppColors.colorPrimaryLight.withOpacity(0.3), AppColors.colorPrimaryLight],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                      icon,
+                      size: ResponsiveUI.iconSize(context, 64),  // تقليل: من 80 إلى 64 للشاشات الصغيرة (ResponsiveUI يتعامل)
+                      color: AppColors.colorPrimary
+                  ),
                 ),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: ResponsiveUI.iconSize(context, 80), color: AppColors.colorPrimary),
+                SizedBox(height: ResponsiveUI.spacing(context, 20)),  // تقليل: من 24 إلى 20
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: ResponsiveUI.fontSize(context, 20),  // تقليل: من 22 إلى 20
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade800,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: ResponsiveUI.spacing(context, 10)),  // تقليل: من 12 إلى 10
+                Text(
+                  message,
+                  style: TextStyle(
+                    fontSize: ResponsiveUI.fontSize(context, 14),  // تقليل: من 15 إلى 14
+                    color: Colors.grey.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-            SizedBox(height: ResponsiveUI.spacing(context, 24)),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: ResponsiveUI.fontSize(context, 22),
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            SizedBox(height: ResponsiveUI.spacing(context, 12)),
-            Text(
-              message,
-              style: TextStyle(fontSize: ResponsiveUI.fontSize(context, 15), color: Colors.grey.shade600),
-              textAlign: TextAlign.center,
-            ),
-          ],
+          ),
         ),
       ),
     );

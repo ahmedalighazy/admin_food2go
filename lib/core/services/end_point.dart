@@ -8,6 +8,7 @@ class EndPoint {
   static const String UpdateProfile = 'admin/profile/update';
 
   static const String ordersCount = 'admin/order/orders_count';
+  static const String ordersChangeStatus = 'admin/order/status/';
 
   static const String OrderList = 'admin/order/order_details';
   static const String OrderItem = 'admin/order/order';

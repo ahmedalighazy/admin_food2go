@@ -45,6 +45,10 @@ dependencies:
   flutter_bloc: ^9.1.1
   image_picker: ^1.2.0
   permission_handler: ^11.3.0
+  firebase_messaging: ^16.0.3
+  flutter_local_notifications: ^19.5.0
+  firebase_core: ^4.2.0
+  cached_network_image: ^3.4.1
 
 
 dev_dependencies:

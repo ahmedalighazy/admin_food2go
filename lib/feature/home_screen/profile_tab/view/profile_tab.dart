@@ -120,23 +120,23 @@ class _ProfileTabState extends State<ProfileTab> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 16)),
         ),
-        title: const Text(
+        title: Text(
           'Log Out',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 20,
+            fontSize: ResponsiveUI.fontSize(context, 20),
           ),
         ),
-        content: const Text(
+        content: Text(
           'Are you sure you want to log out? You will need to sign in again.',
-          style: TextStyle(fontSize: 16),
+          style: TextStyle(fontSize: ResponsiveUI.fontSize(context, 16)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -196,7 +196,7 @@ class _ProfileTabState extends State<ProfileTab> {
       },
       builder: (context, state) {
         if (state is ProfileLoading && !_isEditing) {
-          return const ProfileShimmer();
+          return ProfileShimmer();
         }
 
         final profile = context.read<ProfileCubit>().profileModel;
@@ -229,8 +229,8 @@ class _ProfileTabState extends State<ProfileTab> {
                       boxShadow: [
                         BoxShadow(
                           color: AppColors.colorPrimary.withOpacity(0.4),
-                          blurRadius: 24,
-                          offset: const Offset(0, 12),
+                          blurRadius: ResponsiveUI.value(context, 24),
+                          offset: Offset(0, ResponsiveUI.value(context, 12)),
                           spreadRadius: 0,
                         ),
                       ],
@@ -239,11 +239,11 @@ class _ProfileTabState extends State<ProfileTab> {
                       children: [
                         // Decorative circles
                         Positioned(
-                          top: -50,
-                          right: -50,
+                          top: ResponsiveUI.value(context, -50),
+                          right: ResponsiveUI.value(context, -50),
                           child: Container(
-                            width: 150,
-                            height: 150,
+                            width: ResponsiveUI.value(context, 150),
+                            height: ResponsiveUI.value(context, 150),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors.white.withOpacity(0.1),
@@ -251,11 +251,11 @@ class _ProfileTabState extends State<ProfileTab> {
                           ),
                         ),
                         Positioned(
-                          bottom: -30,
-                          left: -30,
+                          bottom: ResponsiveUI.value(context, -30),
+                          left: ResponsiveUI.value(context, -30),
                           child: Container(
-                            width: 100,
-                            height: 100,
+                            width: ResponsiveUI.value(context, 100),
+                            height: ResponsiveUI.value(context, 100),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors.white.withOpacity(0.1),
@@ -272,7 +272,7 @@ class _ProfileTabState extends State<ProfileTab> {
                               Stack(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.all(6),
+                                    padding: EdgeInsets.all(ResponsiveUI.value(context, 6)),
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       gradient: LinearGradient(
@@ -286,8 +286,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black.withOpacity(0.2),
-                                          blurRadius: 20,
-                                          offset: const Offset(0, 8),
+                                          blurRadius: ResponsiveUI.value(context, 20),
+                                          offset: Offset(0, ResponsiveUI.value(context, 8)),
                                         ),
                                       ],
                                     ),
@@ -296,7 +296,7 @@ class _ProfileTabState extends State<ProfileTab> {
                                         shape: BoxShape.circle,
                                         border: Border.all(
                                           color: Colors.white,
-                                          width: 3,
+                                          width: ResponsiveUI.value(context, 3),
                                         ),
                                       ),
                                       child: CircleAvatar(
@@ -324,8 +324,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                   ),
                                   if (_isEditing)
                                     Positioned(
-                                      bottom: 5,
-                                      right: 5,
+                                      bottom: ResponsiveUI.value(context, 5),
+                                      right: ResponsiveUI.value(context, 5),
                                       child: GestureDetector(
                                         onTap: _pickImage,
                                         child: Container(
@@ -344,8 +344,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                               BoxShadow(
                                                 color: Colors.black
                                                     .withOpacity(0.3),
-                                                blurRadius: 12,
-                                                offset: const Offset(0, 4),
+                                                blurRadius: ResponsiveUI.value(context, 12),
+                                                offset: Offset(0, ResponsiveUI.value(context, 4)),
                                               ),
                                             ],
                                           ),
@@ -375,8 +375,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                   shadows: [
                                     Shadow(
                                       color: Colors.black.withOpacity(0.3),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
+                                      blurRadius: ResponsiveUI.value(context, 8),
+                                      offset: Offset(0, ResponsiveUI.value(context, 2)),
                                     ),
                                   ],
                                 ),
@@ -453,8 +453,8 @@ class _ProfileTabState extends State<ProfileTab> {
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.08),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
+                          blurRadius: ResponsiveUI.value(context, 20),
+                          offset: Offset(0, ResponsiveUI.value(context, 8)),
                           spreadRadius: 0,
                         ),
                       ],
@@ -616,8 +616,8 @@ class _ProfileTabState extends State<ProfileTab> {
                                 BoxShadow(
                                   color:
                                   AppColors.colorPrimary.withOpacity(0.4),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 8),
+                                  blurRadius: ResponsiveUI.value(context, 16),
+                                  offset: Offset(0, ResponsiveUI.value(context, 8)),
                                 ),
                               ],
                             ),
@@ -634,12 +634,12 @@ class _ProfileTabState extends State<ProfileTab> {
                                 ),
                               ),
                               child: state is ProfileLoading
-                                  ? const SizedBox(
-                                height: 24,
-                                width: 24,
+                                  ? SizedBox(
+                                height: ResponsiveUI.value(context, 24),
+                                width: ResponsiveUI.value(context, 24),
                                 child: CircularProgressIndicator(
                                   color: Colors.white,
-                                  strokeWidth: 2.5,
+                                  strokeWidth: ResponsiveUI.value(context, 2.5),
                                 ),
                               )
                                   : Row(
@@ -692,8 +692,8 @@ class _ProfileTabState extends State<ProfileTab> {
                       boxShadow: [
                         BoxShadow(
                           color: Colors.red.withOpacity(0.4),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
+                          blurRadius: ResponsiveUI.value(context, 16),
+                          offset: Offset(0, ResponsiveUI.value(context, 8)),
                         ),
                       ],
                     ),
@@ -794,7 +794,7 @@ class _ProfileTabState extends State<ProfileTab> {
           ),
           borderSide: BorderSide(
             color: AppColors.colorPrimaryLight.withOpacity(0.5),
-            width: 1.5,
+            width: ResponsiveUI.value(context, 1.5),
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -803,7 +803,7 @@ class _ProfileTabState extends State<ProfileTab> {
           ),
           borderSide: BorderSide(
             color: AppColors.colorPrimary,
-            width: 2,
+            width: ResponsiveUI.value(context, 2),
           ),
         ),
         errorBorder: OutlineInputBorder(
@@ -812,16 +812,16 @@ class _ProfileTabState extends State<ProfileTab> {
           ),
           borderSide: BorderSide(
             color: Colors.red.shade400,
-            width: 1.5,
+            width: ResponsiveUI.value(context, 1.5),
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(
             ResponsiveUI.borderRadius(context, 14),
           ),
-          borderSide: const BorderSide(
+          borderSide: BorderSide(
             color: Colors.red,
-            width: 2,
+            width: ResponsiveUI.value(context, 2),
           ),
         ),
         contentPadding: EdgeInsets.symmetric(
@@ -839,6 +839,6 @@ class ProfileShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const OverviewShimmer();
+    return OverviewShimmer();
   }
 }

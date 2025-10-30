@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/services/cache_helper.dart.dart';
+import '../auth/cubit/login_cubit.dart';
 import '../restaurant_selection/cubit/restaurant_cubit.dart';
 import '../restaurant_selection/view/restaurant_selection_screen.dart';
 import '../auth/view/login_screen.dart';
 import '../home_screen/home_screen.dart';
+import 'dart:developer';
 
 class SplashScreen extends StatefulWidget {
   static const routeName = '/splash';
@@ -62,27 +63,40 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     if (!mounted) return;
 
-    // Check if restaurant is configured
-    final restaurantCubit = context.read<RestaurantCubit>();
-    final isConfigured = await restaurantCubit.isRestaurantConfigured();
+    try {
+      log('🔍 Starting app state check...');
 
-    if (!isConfigured) {
-      // Go to restaurant selection
-      Navigator.of(context).pushReplacementNamed(
-        RestaurantSelectionScreen.routeName,
-      );
-      return;
-    }
+      // Check if restaurant is configured
+      final restaurantCubit = context.read<RestaurantCubit>();
+      final isConfigured = await restaurantCubit.isRestaurantConfigured();
 
-    // Check if user is logged in
-    final token = CacheHelper.getData(key: 'token');
+      if (!isConfigured) {
+        log('🏢 No restaurant configured, navigating to restaurant selection');
+        Navigator.of(context).pushReplacementNamed(
+          RestaurantSelectionScreen.routeName,
+        );
+        return;
+      }
 
-    if (token != null) {
-      // User is logged in, go to home
-      Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
-    } else {
-      // User not logged in, go to login
-      Navigator.of(context).pushReplacementNamed(LoginScreen.routeName);
+      log('✅ Restaurant is configured');
+
+      // Check if user is logged in using LoginCubit
+      final loginCubit = context.read<LoginCubit>();
+      final isLoggedIn = await loginCubit.checkLoginStatus();
+
+      if (isLoggedIn) {
+        log('✅ User is logged in, navigating to home');
+        Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+      } else {
+        log('❌ User not logged in, navigating to login');
+        Navigator.of(context).pushReplacementNamed(LoginScreen.routeName);
+      }
+    } catch (e) {
+      log('❌ Error checking app state: $e');
+      // On error, go to login screen as fallback
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed(LoginScreen.routeName);
+      }
     }
   }
 

@@ -7,6 +7,7 @@ import 'dine_in_order_tab/view/dine_in_order_tab.dart';
 import 'home_tab/home_tab.dart';
 import 'order_tab/view/order_tab.dart';
 import 'package:admin_food2go/core/services/role_manager.dart';
+import 'package:admin_food2go/core/utils/responsive_ui.dart';
 import 'dart:developer';
 
 class HomeScreen extends StatefulWidget {
@@ -76,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
         SnackBar(
           content: Text('You don\'t have permission to access this section'),
           backgroundColor: Colors.orange,
-          duration: Duration(seconds: 2),
+          duration: Duration(seconds: ResponsiveUI.value(context, 2).toInt()),
         ),
       );
     }
@@ -109,31 +110,31 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Icon(
                 Icons.error_outline,
-                size: 80,
+                size: ResponsiveUI.iconSize(context, 80),
                 color: Colors.red[300],
               ),
-              SizedBox(height: 24),
+              SizedBox(height: ResponsiveUI.spacing(context, 24)),
               Text(
                 'No Access',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: ResponsiveUI.fontSize(context, 24),
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
               ),
-              SizedBox(height: 12),
+              SizedBox(height: ResponsiveUI.spacing(context, 12)),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 32),
+                padding: EdgeInsets.symmetric(horizontal: ResponsiveUI.padding(context, 32)),
                 child: Text(
                   'You don\'t have access to any sections. Please contact your administrator.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: ResponsiveUI.fontSize(context, 16),
                     color: Colors.grey[600],
                   ),
                 ),
               ),
-              SizedBox(height: 32),
+              SizedBox(height: ResponsiveUI.spacing(context, 32)),
               ElevatedButton.icon(
                 onPressed: () {
                   // Navigate back or logout
@@ -143,9 +144,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 label: Text('Go Back'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color.fromRGBO(158, 9, 15, 1),
-                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding: EdgeInsets.symmetric(horizontal: ResponsiveUI.padding(context, 32), vertical: ResponsiveUI.padding(context, 16)),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 12)),
                   ),
                 ),
               ),
@@ -165,11 +166,11 @@ class _HomeScreenState extends State<HomeScreen> {
       body: _getCurrentPage(),
       bottomNavigationBar: CurvedNavigationBar(
         index: _selectedIndex,
-        height: 75,
+        height: ResponsiveUI.value(context, 75),
         items: accessibleTabs
             .map((tab) => Icon(
           _getIconForTab(tab.icon),
-          size: 30,
+          size: ResponsiveUI.iconSize(context, 30),
           color: Colors.white,
         ))
             .toList(),
@@ -177,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
         buttonBackgroundColor: const Color.fromRGBO(158, 9, 15, 1),
         backgroundColor: Colors.white,
         animationCurve: Curves.easeInOut,
-        animationDuration: const Duration(milliseconds: 600),
+        animationDuration: Duration(milliseconds: ResponsiveUI.value(context, 600).toInt()),
         onTap: (index) {
           // Validate index before using it
           if (index >= 0 && index < accessibleTabs.length) {

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:admin_food2go/core/services/dio_helper.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,7 +27,6 @@ class OrderCubit extends Cubit<OrderState> {
   }) async {
     if (isClosed) return;
     emit(OrderLoading());
-
     try {
       final response = await DioHelper.getData(
         url: EndPoint.ordersCount,
@@ -35,12 +35,9 @@ class OrderCubit extends Cubit<OrderState> {
           if (end != null) 'end': end,
         },
       );
-
       DioHelper.printResponse(response);
-
       if (response.statusCode == 200) {
         final data = response.data;
-
         if (data != null) {
           orderList = OrderCount.fromJson(data);
           if (isClosed) return;
@@ -70,7 +67,6 @@ class OrderCubit extends Cubit<OrderState> {
   }) async {
     if (isClosed) return;
     emit(OrderListLoading());
-
     try {
       final response = await DioHelper.getData(
         url: EndPoint.OrderList,
@@ -80,15 +76,11 @@ class OrderCubit extends Cubit<OrderState> {
           if (end != null) 'end': end,
         },
       );
-
       DioHelper.printResponse(response);
-
       if (response.statusCode == 200) {
         final data = response.data;
-
         if (data != null) {
           orders = OrderList.fromJson(data);
-
           if (orders?.orders == null || orders!.orders!.isEmpty) {
             if (isClosed) return;
             emit(OrderListEmpty());
@@ -109,7 +101,11 @@ class OrderCubit extends Cubit<OrderState> {
     } catch (error) {
       if (isClosed) return;
       final errorMessage = ErrorHandler.handleError(error);
-      emit(OrderError(message: errorMessage));
+      if (error is DioException && error.response?.statusCode == 404) {
+        emit(OrderError(message: 'Endpoint not found. Check server routes for orders list.'));
+      } else {
+        emit(OrderError(message: errorMessage));
+      }
     }
   }
 
@@ -117,17 +113,13 @@ class OrderCubit extends Cubit<OrderState> {
   Future<void> getOrderItem({required int orderId}) async {
     if (isClosed) return;
     emit(OrderLoading());
-
     try {
       final response = await DioHelper.getData(
         url: '${EndPoint.OrderItem}/$orderId',
       );
-
       DioHelper.printResponse(response);
-
       if (response.statusCode == 200) {
         final data = response.data;
-
         if (data != null) {
           orderItem = OrderItemModel.fromJson(data);
           if (isClosed) return;
@@ -153,17 +145,13 @@ class OrderCubit extends Cubit<OrderState> {
   Future<void> getOrderInvoice({required int orderId}) async {
     if (isClosed) return;
     emit(OrderInvoiceLoading());
-
     try {
       final response = await DioHelper.getData(
         url: '${EndPoint.OrderInvoice}/$orderId',
       );
-
       DioHelper.printResponse(response);
-
       if (response.statusCode == 200) {
         final data = response.data;
-
         if (data != null) {
           invoice = InvoiceModel.fromJson(data);
           if (isClosed) return;
@@ -176,6 +164,44 @@ class OrderCubit extends Cubit<OrderState> {
         if (isClosed) return;
         emit(OrderError(
           message: 'Failed to load invoice: ${response.statusCode}',
+        ));
+      }
+    } catch (error) {
+      if (isClosed) return;
+      final errorMessage = ErrorHandler.handleError(error);
+      emit(OrderError(message: errorMessage));
+    }
+  }
+
+  // Change order status
+  Future<void> changeOrderStatus({
+    required int orderId,
+    required String newStatus,
+  }) async {
+    if (isClosed) return;
+    emit(OrderStatusChangeLoading());
+    try {
+      final response = await DioHelper.putData(
+        url: '${EndPoint.ordersChangeStatus}$orderId',
+        data: {
+          'order_status': newStatus,
+        },
+      );
+      DioHelper.printResponse(response);
+      if (response.statusCode == 200) {
+        if (isClosed) return;
+        emit(OrderStatusChangeSuccess());
+        // Refresh the order list after successful status change
+        if (orders != null && orders!.orders != null) {
+          final orderIndex = orders!.orders!.indexWhere((o) => o.id == orderId);
+          if (orderIndex != -1) {
+            orders!.orders![orderIndex].orderStatus = newStatus;
+          }
+        }
+      } else {
+        if (isClosed) return;
+        emit(OrderError(
+          message: 'Failed to change order status: ${response.statusCode}',
         ));
       }
     } catch (error) {

@@ -1,9 +1,9 @@
+import 'package:admin_food2go/core/services/cache_helper.dart.dart' show CacheHelper;
 import 'package:admin_food2go/core/services/end_point.dart';
 import 'package:admin_food2go/core/services/role_manager.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:admin_food2go/core/services/session_helper.dart';
-import '../../../core/services/cache_helper.dart.dart';
 import '../../../core/services/dio_helper.dart';
 import '../../../core/utils/error_handler.dart';
 import '../model/user_login.dart';
@@ -21,12 +21,22 @@ class LoginCubit extends Cubit<LoginState> {
     try {
       log('🔐 Login attempt with email: $email');
 
+      // 🔥 Get FCM Token from cache
+      final fcmToken = CacheHelper.getString(key: 'fcm_token');
+      log('📱 FCM Token: ${fcmToken ?? "Not available"}');
+
+      // ✅ Prepare login data with FCM token
+      final loginData = {
+        'email': email,
+        'password': password,
+        if (fcmToken != null && fcmToken.isNotEmpty) 'fcm_token': fcmToken,
+      };
+
+      log('📤 Sending login request with data: ${loginData.keys}');
+
       final response = await DioHelper.postData(
         url: EndPoint.login,
-        data: {
-          'email': email,
-          'password': password,
-        },
+        data: loginData,
       );
 
       log('✅ Response received: ${response.statusCode}');
@@ -53,27 +63,40 @@ class LoginCubit extends Cubit<LoginState> {
           return;
         }
 
-        // Cache the token
-        if (userLogin.token != null) {
-          await CacheHelper.saveData(
+        // 💾 Cache the auth token (للبقاء مسجل دخول)
+        if (userLogin.token != null && userLogin.token!.isNotEmpty) {
+          final tokenSaved = await CacheHelper.saveData(
             key: 'token',
             value: userLogin.token!,
           );
-          log('💾 Token cached successfully');
+
+          if (tokenSaved) {
+            log('💾 ✅ Auth Token cached successfully');
+            log('🔑 Token saved: ${userLogin.token}');
+          } else {
+            log('❌ Failed to cache auth token');
+            emit(LoginError('Failed to save authentication data'));
+            return;
+          }
         } else {
           log('⚠️ No token received from server');
           emit(LoginError('Authentication failed: No token received'));
           return;
         }
 
-        // Cache the user data
+        // 💾 Cache the user data
         if (userLogin.admin != null) {
-          await CacheHelper.saveModel<Admin>(
+          final adminSaved = await CacheHelper.saveModel<Admin>(
             key: 'admin',
             model: userLogin.admin!,
             toJson: (admin) => admin.toJson(),
           );
-          log('💾 Admin data cached successfully');
+
+          if (adminSaved) {
+            log('💾 ✅ Admin data cached successfully');
+          } else {
+            log('⚠️ Failed to cache admin data');
+          }
 
           // Log user roles/permissions
           if (hasRoles) {
@@ -112,6 +135,7 @@ class LoginCubit extends Cubit<LoginState> {
         }
 
         log('🎉 Login successful for: ${userLogin.admin?.email}');
+        log('💾 All data cached successfully - User will stay logged in');
         emit(LoginSuccess(userLogin));
       } else {
         final errorMsg = 'Login failed with status code: ${response.statusCode}';
@@ -157,16 +181,18 @@ class LoginCubit extends Cubit<LoginState> {
     }
   }
 
-  /// Check if user is already logged in
+  /// Check if user is already logged in (لتجنب إعادة تسجيل الدخول)
   Future<bool> checkLoginStatus() async {
     try {
       log('🔍 Checking login status...');
 
-      final token = CacheHelper.getData(key: 'token');
-      if (token == null || token.toString().isEmpty) {
+      final token = CacheHelper.getString(key: 'token');
+      if (token == null || token.isEmpty) {
         log('❌ No token found');
         return false;
       }
+
+      log('✅ Token found: ${token.substring(0, 20)}...');
 
       final admin = CacheHelper.getModel<Admin>(
         key: 'admin',
@@ -190,6 +216,7 @@ class LoginCubit extends Cubit<LoginState> {
         return false;
       }
 
+      log('✅ User has ${accessibleTabs.length} accessible tabs');
       return true;
     } catch (e) {
       log('❌ Error checking login status: $e');

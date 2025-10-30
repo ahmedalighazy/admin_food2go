@@ -6,6 +6,11 @@ class OrderLoading extends OrderState {}
 
 class OrderSuccess extends OrderState {}
 
+class OrderError extends OrderState {
+  final String message;
+  OrderError({required this.message});
+}
+
 class OrderListLoading extends OrderState {}
 
 class OrderListSuccess extends OrderState {}
@@ -16,8 +21,7 @@ class OrderInvoiceLoading extends OrderState {}
 
 class OrderInvoiceSuccess extends OrderState {}
 
-class OrderError extends OrderState {
-  final String message;
+// New states for status change
+class OrderStatusChangeLoading extends OrderState {}
 
-  OrderError({required this.message});
-}
+class OrderStatusChangeSuccess extends OrderState {}
