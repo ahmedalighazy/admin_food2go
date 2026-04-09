@@ -3,7 +3,13 @@ class InvoiceModel {
     this.order,});
 
   InvoiceModel.fromJson(dynamic json) {
-    order = json['order'] != null ? Order.fromJson(json['order']) : null;
+    // Handle both cases: wrapped in 'order' key or direct data
+    if (json['order'] != null) {
+      order = Order.fromJson(json['order']);
+    } else if (json is Map && json.containsKey('id')) {
+      // If response contains order data directly (has 'id' field)
+      order = Order.fromJson(json);
+    }
   }
   Order? order;
 
@@ -36,6 +42,7 @@ class Order {
     this.notes,
     this.couponDiscount,
     this.orderNumber,
+    this.orderNumber2,
     this.paymentMethodId,
     this.receipt,
     this.status,
@@ -64,7 +71,12 @@ class Order {
     this.fromTableOrder,
     this.due,
     this.orderDate,
+    this.orderTime,
     this.statusPayment,
+    this.serviceFees,
+    this.rate,
+    this.comment,
+    this.payment,
     this.orderDetailsData,
     this.user,
     this.address,
@@ -90,7 +102,8 @@ class Order {
     addressId = json['address_id'];
     notes = json['notes'];
     couponDiscount = json['coupon_discount'];
-    orderNumber = json['order_number'];
+    orderNumber = json['order_number']?.toString();
+    orderNumber2 = json['order_number2']?.toString();
     paymentMethodId = json['payment_method_id'];
     receipt = json['receipt'];
     status = json['status'];
@@ -124,7 +137,12 @@ class Order {
     fromTableOrder = json['from_table_order'];
     due = json['due'];
     orderDate = json['order_date'];
+    orderTime = json['order_time'];
     statusPayment = json['status_payment'];
+    serviceFees = json['service_fees'];
+    rate = json['rate'];
+    comment = json['comment'];
+    payment = json['payment'];
     if (json['order_details_data'] != null) {
       orderDetailsData = [];
       json['order_details_data'].forEach((v) {
@@ -155,6 +173,7 @@ class Order {
   dynamic notes;
   num? couponDiscount;
   String? orderNumber;
+  dynamic orderNumber2;
   num? paymentMethodId;
   dynamic receipt;
   dynamic status;
@@ -183,7 +202,12 @@ class Order {
   num? fromTableOrder;
   num? due;
   String? orderDate;
+  String? orderTime;
   String? statusPayment;
+  dynamic serviceFees;
+  dynamic rate;
+  dynamic comment;
+  dynamic payment;
   List<OrderDetailsData>? orderDetailsData;
   User? user;
   dynamic address;
@@ -211,6 +235,7 @@ class Order {
     map['notes'] = notes;
     map['coupon_discount'] = couponDiscount;
     map['order_number'] = orderNumber;
+    map['order_number2'] = orderNumber2;
     map['payment_method_id'] = paymentMethodId;
     map['receipt'] = receipt;
     map['status'] = status;
@@ -241,7 +266,12 @@ class Order {
     map['from_table_order'] = fromTableOrder;
     map['due'] = due;
     map['order_date'] = orderDate;
+    map['order_time'] = orderTime;
     map['status_payment'] = statusPayment;
+    map['service_fees'] = serviceFees;
+    map['rate'] = rate;
+    map['comment'] = comment;
+    map['payment'] = payment;
     if (orderDetailsData != null) {
       map['order_details_data'] = orderDetailsData?.map((v) => v.toJson()).toList();
     }
@@ -294,7 +324,7 @@ class Branch {
     coverImage = json['cover_image'];
     foodPreparionTime = json['food_preparion_time'];
     latitude = json['latitude'];
-    longitude = json['longitude'];
+    longitude = json['longitude']?.toString();
     coverage = json['coverage'];
     status = json['status'];
     emailVerifiedAt = json['email_verified_at'];
@@ -556,9 +586,19 @@ class ProductItem {
     this.notes,});
 
   ProductItem.fromJson(dynamic json) {
-    product = json['product'] != null ? ProductDetails.fromJson(json['product']) : null;
-    count = json['count'];
-    notes = json['notes'];
+    // Check if product data is nested or flat
+    if (json['product'] != null) {
+      // Nested structure: {product: {...}, count: 1, notes: null}
+      product = ProductDetails.fromJson(json['product']);
+      count = json['count'];
+      notes = json['notes'];
+    } else if (json['id'] != null) {
+      // Flat structure: {id: 161, name: ..., count: 1, notes: null}
+      // The product data is directly in json
+      product = ProductDetails.fromJson(json);
+      count = json['count'];
+      notes = json['notes'];
+    }
   }
   ProductDetails? product;
   num? count;
@@ -619,7 +659,7 @@ class ProductDetails {
         allExtras?.add(v);
       });
     }
-    taxes = json['taxes'];
+    taxes = json['taxes']?.toString();
     name = json['name'];
     description = json['description'];
     image = json['image'];
@@ -760,11 +800,17 @@ class OrderDetails {
         excludes?.add(v);
       });
     }
+    // Handle product - can be object or array
     if (json['product'] != null) {
       product = [];
-      json['product'].forEach((v) {
-        product?.add(ProductItem.fromJson(v));
-      });
+      if (json['product'] is List) {
+        json['product'].forEach((v) {
+          product?.add(ProductItem.fromJson(v));
+        });
+      } else if (json['product'] is Map) {
+        // If it's a single object, wrap it in a list
+        product?.add(ProductItem.fromJson(json['product']));
+      }
     }
     if (json['variations'] != null) {
       variations = [];

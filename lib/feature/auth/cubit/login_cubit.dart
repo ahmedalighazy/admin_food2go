@@ -156,9 +156,9 @@ class LoginCubit extends Cubit<LoginState> {
     }
   }
 
-  Future<void> logout() async {
+  Future<void> logout({bool clearRestaurantData = false}) async {
     try {
-      log('🚪 Logout initiated');
+      log('🚪 Logout initiated (clearRestaurantData: $clearRestaurantData)');
 
       // Clear roles first
       RoleManager.clearRoles();
@@ -168,9 +168,14 @@ class LoginCubit extends Cubit<LoginState> {
       await CacheHelper.clearAllData();
       log('✅ Cache cleared');
 
-      // Notify session expired
-      SessionManager.notifySessionExpired();
-      log('✅ Session expired notification sent');
+      // Only notify session expired if NOT clearing restaurant data
+      // (because we want to go to restaurant selection, not login)
+      if (!clearRestaurantData) {
+        SessionManager.notifySessionExpired();
+        log('✅ Session expired notification sent');
+      } else {
+        log('⏭️ Skipping session expired notification (going to restaurant selection)');
+      }
 
       log('✅ Logout successful');
       emit(LoginInitial());
@@ -192,7 +197,7 @@ class LoginCubit extends Cubit<LoginState> {
         return false;
       }
 
-      log('✅ Token found: ${token.substring(0, 20)}...');
+      log('✅ Token found: ///////////${token}...');
 
       final admin = CacheHelper.getModel<Admin>(
         key: 'admin',

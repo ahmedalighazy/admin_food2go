@@ -33,7 +33,9 @@ class Orders {
     this.orderStatus,
     this.source,
     this.status,
+    this.rate,
     this.points,
+    this.couponDiscount,
     this.rejectedReason,
     this.transactionId,
     this.user,
@@ -47,14 +49,16 @@ class Orders {
 
   Orders.fromJson(dynamic json) {
     id = json['id'];
-    orderNumber = json['order_number'];
+    orderNumber = json['order_number']?.toString();
     createdAt = json['created_at'];
     amount = json['amount'];
     operationStatus = json['operation_status'];
     orderStatus = json['order_status'];
     source = json['source'];
     status = json['status'];
+    rate = json['rate'];
     points = json['points'];
+    couponDiscount = json['coupon_discount'];
     rejectedReason = json['rejected_reason'];
     transactionId = json['transaction_id'];
     user = json['user'] != null ? User.fromJson(json['user']) : null;
@@ -74,7 +78,9 @@ class Orders {
   String? orderStatus;
   String? source;
   dynamic status;
+  dynamic rate;
   num? points;
+  num? couponDiscount;
   dynamic rejectedReason;
   dynamic transactionId;
   User? user;
@@ -95,7 +101,9 @@ class Orders {
     map['order_status'] = orderStatus;
     map['source'] = source;
     map['status'] = status;
+    map['rate'] = rate;
     map['points'] = points;
+    map['coupon_discount'] = couponDiscount;
     map['rejected_reason'] = rejectedReason;
     map['transaction_id'] = transactionId;
     if (user != null) {

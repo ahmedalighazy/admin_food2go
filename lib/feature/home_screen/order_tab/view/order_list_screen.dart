@@ -100,14 +100,17 @@ class _OrderListScreenState extends State<OrderListScreen>
       duration: const Duration(milliseconds: 300),
     );
     _animationController.forward();
+
     if (widget.orderStatus != null) {
       selectedStatus = widget.orderStatus!;
     } else {
       selectedStatus = 'pending';
     }
-    _loadOrders();
+
+    // ✅ الاتنين مفيش تعارض دلوقتي
     final cubit = context.read<OrderCubit>();
-    cubit.getOrdersCount();
+    cubit.refreshOrdersCount(); // بيعمل OrderCountLoading مش OrderLoading
+    _loadOrders();              // بيعمل OrderListLoading
 
     _searchController.addListener(() {
       setState(() {
@@ -460,9 +463,9 @@ class _OrderListScreenState extends State<OrderListScreen>
                       ),
                     );
                     _loadOrders();
-                    context.read<OrderCubit>().getOrdersCount();
+                    context.read<OrderCubit>().refreshOrdersCount(); // ✅ بدل getOrdersCount
                   }
-                  if (state is OrderError) {
+                  if (state is OrderStatusChangeError) {
                     String message = state.message;
                     if (message.contains('500') || message.contains('Laravel')) {
                       message = 'Server error (500). Please try again.';
@@ -540,198 +543,255 @@ class _OrderListScreenState extends State<OrderListScreen>
         cubit.getOrderInvoice(orderId: order.id!.toInt());
         return BlocProvider.value(
           value: cubit,
-          child: AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            contentPadding: EdgeInsets.zero,
-            content: Container(
-              width: MediaQuery.of(context).size.width * 0.9,
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.7,
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(maxWidth: 400),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.colorPrimary,
-                          AppColors.colorPrimary.withOpacity(0.8),
-                        ],
-                      ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.receipt_long,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Invoice Details',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              Text(
-                                order.orderNumber ?? 'N/A',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.close,
-                            color: Colors.white,
-                          ),
-                          onPressed: () => Navigator.pop(dialogContext),
-                        ),
-                      ],
+                  // --- زر الإغلاق ---
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.black54),
+                      onPressed: () => Navigator.pop(dialogContext),
                     ),
                   ),
+
+                  // --- محتوى الفاتورة ---
                   Flexible(
                     child: BlocBuilder<OrderCubit, OrderState>(
                       buildWhen: (previous, current) {
                         return current is OrderInvoiceLoading ||
                             current is OrderInvoiceSuccess ||
-                            (current is OrderError &&
-                                previous is OrderInvoiceLoading);
+                            current is OrderInvoiceError;
                       },
                       builder: (context, state) {
                         if (state is OrderInvoiceLoading) {
-                          return Container(
-                            padding: const EdgeInsets.all(40),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircularProgressIndicator(
-                                  color: AppColors.colorPrimary,
-                                ),
-                                const SizedBox(height: 16),
-                                const Text('Loading invoice...'),
-                              ],
+                          return const Padding(
+                            padding: EdgeInsets.all(40),
+                            child: Center(
+                              child: CircularProgressIndicator(color: Colors.black),
                             ),
                           );
                         }
                         if (state is OrderInvoiceSuccess) {
-                          final cubit = context.read<OrderCubit>();
                           final invoice = cubit.invoice;
-                          if (invoice == null) {
-                            return const Padding(
-                              padding: EdgeInsets.all(20),
-                              child: Text('No invoice data available'),
-                            );
-                          }
+                          final invoiceData = invoice?.order;
+
+                          final String orderNum = invoiceData?.orderNumber ?? order.orderNumber ?? 'N/A';
+                          final String orderDate = invoiceData?.createdAt ?? order.createdAt ?? '';
+                          final String fName = invoiceData?.user?.fName ?? order.user?.fName ?? '';
+                          final String lName = invoiceData?.user?.lName ?? order.user?.lName ?? '';
+                          final String phone = invoiceData?.user?.phone ?? order.user?.phone ?? 'N/A';
+                          final String type = invoiceData?.orderType ?? 'N/A';
+                          final bool isDelivery = type.toLowerCase() == 'delivery';
+                          final String paymentStat = (invoiceData?.paymentStatus == 1 || invoiceData?.statusPayment == 'paid') ? 'Paid' : 'UnPaid';
+
                           return SingleChildScrollView(
-                            padding: const EdgeInsets.all(20),
+                            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildInvoiceSection(
-                                  'Invoice Information',
-                                  [
-                                    _buildInvoiceRow('Invoice Number',
-                                        invoice.order?.toString() ?? 'N/A'),
-                                    _buildInvoiceRow('Order Number',
-                                        order.orderNumber ?? 'N/A'),
-                                    _buildInvoiceRow(
-                                        'Date', _formatDate(order.createdAt ?? '')),
-                                    _buildInvoiceRow('Status',
-                                        _formatStatus(order.orderStatus ?? 'N/A')),
+                                // Logo and Header (Uncomment if needed)
+                                // Center( ... ),
+
+                                const SizedBox(height: 10),
+                                _buildDashedLine(),
+                                const SizedBox(height: 10),
+
+                                // 2. Order Information
+                                _buildReceiptInfoRow('Order #:', orderNum),
+                                _buildReceiptInfoRow('Date:', _formatReceiptDate(orderDate)),
+                                _buildReceiptInfoRow('Time:', _formatReceiptTime(orderDate)),
+                                _buildReceiptInfoRow('Client:', '$fName $lName'.trim()),
+                                _buildReceiptInfoRow('Phone:', phone),
+                                _buildReceiptInfoRow('Order Type:', _formatStatus(type)),
+                                _buildReceiptInfoRow('Payment:', paymentStat),
+
+                                const SizedBox(height: 10),
+                                _buildDashedLine(),
+
+                                // 3. Delivery Address
+                                if (isDelivery && order.address?.zone?.zone != null) ...[
+                                  const SizedBox(height: 10),
+                                  const Text('Delivery Address:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                  const SizedBox(height: 4),
+                                  Text('Zone: ${order.address!.zone!.zone}', style: const TextStyle(fontSize: 12)),
+                                  const SizedBox(height: 10),
+                                  _buildDashedLine(),
+                                ],
+
+                                const SizedBox(height: 10),
+
+                                // 4. Items Table Header
+                                Row(
+                                  children: const [
+                                    Expanded(flex: 3, child: Text('Item', style: TextStyle(fontWeight: FontWeight.bold))),
+                                    Expanded(flex: 1, child: Text('Qty', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold))),
+                                    Expanded(flex: 2, child: Text('Price', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
+                                    Expanded(flex: 2, child: Text('Total', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold))),
                                   ],
                                 ),
-                                const SizedBox(height: 20),
-                                _buildInvoiceSection(
-                                  'Customer Information',
-                                  [
-                                    _buildInvoiceRow(
-                                      'Name',
-                                      '${order.user?.fName ?? ''} ${order.user?.lName ?? ''}'
-                                          .trim(),
+                                const Divider(color: Colors.black, thickness: 1.5),
+
+                                // 5. Items List
+                                if (invoiceData?.orderDetails != null)
+                                  ...invoiceData!.orderDetails!.map((detail) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: 12.0),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          // 1. المنتج الأساسي
+                                          if (detail.product != null && detail.product!.isNotEmpty)
+                                            ...detail.product!.map((prodItem) {
+                                              final name = prodItem.product?.name ?? 'Unknown Item';
+                                              final qty = prodItem.count ?? 1;
+                                              final price = prodItem.product?.price ?? 0;
+                                              final total = price * qty;
+                                              return Row(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Expanded(
+                                                    flex: 3,
+                                                    child: Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: Text('$qty', textAlign: TextAlign.center, style: const TextStyle(fontSize: 13)),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 2,
+                                                    child: Text(price.toStringAsFixed(2), textAlign: TextAlign.right, style: const TextStyle(fontSize: 13)),
+                                                  ),
+                                                  Expanded(
+                                                    flex: 2,
+                                                    child: Text(total.toStringAsFixed(2), textAlign: TextAlign.right, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                                  ),
+                                                ],
+                                              );
+                                            }),
+
+                                          // 2. التغييرات (Variations) - الدخول جوا الـ options
+                                          if (detail.variations != null && detail.variations!.isNotEmpty)
+                                            ...detail.variations!.expand<Widget>((v) {
+                                              // لو الـ variation جواه قائمة options
+                                              if (v is Map && v['options'] != null && v['options'] is List) {
+                                                // final varName = v['name'] ?? '';
+                                                return (v['options'] as List).map<Widget>((opt) {
+                                                  final optName = opt['name'] ?? '';
+                                                  final optPrice = opt['price'];
+                                                  final priceStr = (optPrice != null && optPrice.toString() != '0' && optPrice.toString() != '0.0') ? ' (+${optPrice})' : '';
+                                                  return _buildSubItemRow('-$optName$priceStr');
+                                                });
+                                              } else if (v is Map) {
+                                                return [_buildSubItemRow('- ${v['name'] ?? v.toString()}')];
+                                              }
+                                              return const [];
+                                            }),
+
+                                          // 3. الإضافات (Addons)
+                                          if (detail.addons != null && detail.addons!.isNotEmpty)
+                                            ...detail.addons!.map((a) {
+                                              if (a is Map) {
+                                                final name = a['name'] ?? '';
+                                                final price = a['price'];
+                                                final priceStr = (price != null && price.toString() != '0' && price.toString() != '0.0') ? ' (+${price})' : '';
+                                                return _buildSubItemRow('+ $name$priceStr');
+                                              }
+                                              return _buildSubItemRow('+ $a');
+                                            }),
+
+                                          // 4. إضافات أخرى (Extras) - لو موجودة
+                                          if (detail.extras != null && detail.extras!.isNotEmpty)
+                                            ...detail.extras!.map((e) {
+                                              if (e is Map) {
+                                                final name = e['name'] ?? '';
+                                                final price = e['price'];
+                                                final priceStr = (price != null && price.toString() != '0' && price.toString() != '0.0') ? ' (+${price})' : '';
+                                                return _buildSubItemRow('+ $name$priceStr');
+                                              }
+                                              return _buildSubItemRow('+ $e');
+                                            }),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+
+                                const Divider(color: Colors.black, thickness: 1),
+
+                                // 6. Calculations
+                                _buildReceiptCalculationRow('Total Product Price', (invoiceData?.amount ?? order.amount ?? 0).toStringAsFixed(2)),
+                                _buildReceiptCalculationRow('Tax %:', (invoiceData?.totalTax ?? 0).toStringAsFixed(2)),
+
+                                if ((invoiceData?.totalDiscount ?? 0) > 0 || !isDelivery)
+                                  _buildReceiptCalculationRow('Discount', '-${(invoiceData?.totalDiscount ?? 0).toStringAsFixed(2)}'),
+
+                                if (isDelivery)
+                                  _buildReceiptCalculationRow('Delivery Fee', '15.00'), // عدلها حسب قيمة التوصيل عندك
+
+                                const Divider(color: Colors.black, thickness: 2),
+
+                                // 7. Grand Total
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Grand Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                    Text(
+                                      (invoiceData?.amount ?? order.amount ?? 0).toStringAsFixed(2),
+                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                     ),
-                                    _buildInvoiceRow(
-                                        'Phone', order.user?.phone ?? 'N/A'),
-                                    if (order.address?.zone?.zone != null)
-                                      _buildInvoiceRow('Location',
-                                          order.address!.zone!.zone!),
                                   ],
                                 ),
-                                const SizedBox(height: 20),
-                                _buildInvoiceSection(
-                                  'Payment Details',
-                                  [
-                                    _buildInvoiceRow('Subtotal',
-                                        '${order.amount ?? 0} EGP', isBold: true),
-                                    if (order.points != null && order.points! > 0)
-                                      _buildInvoiceRow('Points Used',
-                                          '${order.points}', isBold: false),
-                                    const Divider(height: 20),
-                                    _buildInvoiceRow('Total Amount',
-                                        '${order.amount ?? 0} EGP',
-                                        isBold: true, isTotal: true),
-                                  ],
+
+                                const SizedBox(height: 10),
+                                _buildDashedLine(),
+                                const SizedBox(height: 15),
+
+                                // 8. Footer
+                                const Center(
+                                  child: Text('Thank you for your order', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                ),
+                                const Center(
+                                  child: Text('Powered by Food2Go', style: TextStyle(fontSize: 11)),
+                                ),
+                                const Center(
+                                  child: Text('food2go.online', style: TextStyle(fontSize: 11)),
                                 ),
                               ],
                             ),
                           );
                         }
-                        if (state is OrderError) {
-                          String errorMsg = state.message;
-                          if (errorMsg.contains('500')) {
-                            errorMsg = 'Server error (500). Please try again.';
-                          }
+
+                        if (state is OrderInvoiceError) {
                           return Padding(
                             padding: const EdgeInsets.all(20),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.error_outline,
-                                  size: 60,
-                                  color: Colors.red[300],
-                                ),
+                                const Icon(Icons.error_outline, size: 50, color: Colors.red),
                                 const SizedBox(height: 16),
-                                Text(
-                                  errorMsg,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(color: Colors.red),
-                                ),
+                                Text(state.message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
                                 const SizedBox(height: 16),
                                 ElevatedButton(
-                                  onPressed: () {
-                                    context
-                                        .read<OrderCubit>()
-                                        .getOrderInvoice(orderId: order.id!.toInt());
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.colorPrimary,
-                                  ),
-                                  child: const Text('Retry'),
+                                  onPressed: () => context.read<OrderCubit>().getOrderInvoice(orderId: order.id!.toInt()),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
+                                  child: const Text('Retry', style: TextStyle(color: Colors.white)),
                                 ),
                               ],
                             ),
@@ -750,6 +810,103 @@ class _OrderListScreenState extends State<OrderListScreen>
     ).then((_) {
       context.read<OrderCubit>().clearInvoice();
     });
+  }
+
+// دالة مساعدة لعرض الإضافات تحت المنتج بشكل متناسق
+  Widget _buildSubItemRow(String text) {
+    if (text.trim().isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(left: 12.0, top: 4.0),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 11,
+          color: Colors.black87,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashedLine() {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final boxWidth = constraints.constrainWidth();
+        const dashWidth = 5.0;
+        const dashHeight = 1.0;
+        final dashCount = (boxWidth / (2 * dashWidth)).floor();
+        return Flex(
+          children: List.generate(dashCount, (_) {
+            return const SizedBox(
+              width: dashWidth,
+              height: dashHeight,
+              child: DecoratedBox(decoration: BoxDecoration(color: Colors.black87)),
+            );
+          }),
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          direction: Axis.horizontal,
+        );
+      },
+    );
+  }
+
+  // دالة لإنشاء صفوف بيانات الفاتورة (Order #, Client, etc.)
+  Widget _buildReceiptInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 90,
+            child: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87)),
+          ),
+          Expanded(
+            child: Text(value, textAlign: TextAlign.right, style: const TextStyle(fontSize: 13, color: Colors.black)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // دالة لإنشاء صفوف الحسابات (Total, Tax, Discount)
+  Widget _buildReceiptCalculationRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 13, color: Colors.black87)),
+          Text(value, style: const TextStyle(fontSize: 13, color: Colors.black)),
+        ],
+      ),
+    );
+  }
+
+  // دالة مساعدة لتنسيق الوقت من الـ Timestamp
+  String _formatReceiptTime(String? dateString) {
+    if (dateString == null || dateString.isEmpty) return 'N/A';
+    try {
+      final dateTime = DateTime.parse(dateString);
+      // تنسيق بسيط للوقت (e.g. 11:19 PM)
+      String hour = dateTime.hour > 12 ? (dateTime.hour - 12).toString().padLeft(2, '0') : dateTime.hour.toString().padLeft(2, '0');
+      if (hour == '00') hour = '12';
+      String min = dateTime.minute.toString().padLeft(2, '0');
+      String amPm = dateTime.hour >= 12 ? 'PM' : 'AM';
+      return '$hour:$min $amPm';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  // دالة مساعدة لتنسيق التاريخ
+  String _formatReceiptDate(String? dateString) {
+    if (dateString == null || dateString.isEmpty) return 'N/A';
+    try {
+      final dateTime = DateTime.parse(dateString);
+      return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return dateString;
+    }
   }
 
   Widget _buildInvoiceSection(String title, List<Widget> children) {
@@ -823,7 +980,7 @@ class _OrderListScreenState extends State<OrderListScreen>
           ),
           BlocConsumer<OrderCubit, OrderState>(
             listener: (context, state) {
-              if (state is OrderError) {
+              if (state is OrderListError) {
                 String message = state.message;
                 if (message.contains('500') || message.contains('Laravel')) {
                   message = 'Server error (500). Please try again.';
@@ -846,15 +1003,21 @@ class _OrderListScreenState extends State<OrderListScreen>
               }
             },
             builder: (context, state) {
+              final cubit = context.read<OrderCubit>();
+              
               if (state is OrderListLoading) {
                 return SliverToBoxAdapter(child: _buildLoadingShimmer());
               }
-              if (state is OrderError && context.read<OrderCubit>().orders == null) {
+              if (state is OrderListError) {
                 return SliverFillRemaining(
-                  child: ErrorWidgetDine(message: state.message),
+                  child: ErrorWidgetDine(
+                    message: state.message,
+                    onRetry: () {
+                      cubit.getOrdersByStatus(orderStatus: selectedStatus);
+                    },
+                  ),
                 );
               }
-              final cubit = context.read<OrderCubit>();
               final orderList = _filteredOrders;
               if (orderList.isEmpty) {
                 String message = 'There are no orders with status "$selectedStatus".';
@@ -1382,6 +1545,14 @@ class _OrderListScreenState extends State<OrderListScreen>
                           AppColors.colorPrimary,
                         ),
                       ],
+                      if (order.address?.zone?.zone != null) ...[
+                        const SizedBox(height: 12),
+                        _buildInfoRowEnhanced(
+                          Icons.location_on,
+                          order.address!.zone!.zone!,
+                          AppColors.colorPrimary,
+                        ),
+                      ],
                       const Divider(height: 24),
                       Row(
                         children: [
@@ -1435,16 +1606,19 @@ class _OrderListScreenState extends State<OrderListScreen>
                               ),
                               child: Column(
                                 children: [
-                                  Icon(
-                                    Icons.stars,
-                                    color: AppColors.colorPrimary,
-                                    size: 24,
+                                  Text(
+                                    'Points',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.colorPrimary,
+                                    ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     '${order.points}',
                                     style: TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                       color: AppColors.colorPrimary,
                                     ),

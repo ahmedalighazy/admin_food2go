@@ -27,8 +27,8 @@ class NotificationService extends ChangeNotifier {
         final notification = NotificationItem.fromJson(jsonMap);
         _notifications.add(notification);
       }
-      notifyListeners();
-      log('✅ Loaded ${notificationsJsonStrings.length} notifications from cache');
+      log('✅ Loaded ${_notifications.length} notifications from cache');
+      notifyListeners(); // Notify UI after loading
     } catch (e) {
       log('❌ Error loading notifications: $e');
     }
@@ -49,10 +49,12 @@ class NotificationService extends ChangeNotifier {
 
   // Add new notification
   void addNotification(NotificationItem notification) {
+    log('➕ Adding notification: ${notification.title} (ID: ${notification.id})');
     _notifications.insert(0, notification);
-    notifyListeners();
     _saveNotificationsToCache(); // Persist after add
-    log('✅ Notification added. Total: ${_notifications.length}, Unread: $unreadCount');
+    log('💾 Notification saved to cache. Total: ${_notifications.length}');
+    notifyListeners(); // Notify UI to rebuild
+    log('🔔 UI notified. Unread count: $unreadCount');
   }
 
   // Mark notification as read

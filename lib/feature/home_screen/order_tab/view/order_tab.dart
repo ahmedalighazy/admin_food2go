@@ -33,16 +33,20 @@ class OrderTab extends StatelessWidget {
             }
           },
           builder: (context, state) {
+            final cubit = OrderCubit.get(context);
+            
             if (state is OrderLoading) {
               return const OverviewShimmer();
             }
 
             if (state is OrderError) {
-              return ErrorWidgetDine(message: state.message);
+              return ErrorWidgetDine(
+                message: state.message,
+                onRetry: () => cubit.getOrdersCount(),
+              );
             }
 
             if (state is OrderSuccess) {
-              final cubit = OrderCubit.get(context);
               final orderList = cubit.orderList;
 
               if (orderList == null) {

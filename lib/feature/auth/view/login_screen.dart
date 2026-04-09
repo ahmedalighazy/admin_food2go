@@ -5,6 +5,7 @@ import '../../../core/utils/responsive_ui.dart';
 import '../cubit/login_cubit.dart';
 import '../cubit/login_state.dart';
 import '../../home_screen/home_screen.dart';
+import '../../restaurant_selection/view/restaurant_selection_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   static const routeName = '/login';
@@ -58,293 +59,371 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: const Color.fromRGBO(158, 9, 15, 1),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.all(ResponsiveUI.padding(context, 24.0)),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: ResponsiveUI.screenHeight(context) * 0.08),
-                // Logo and Title
-                Container(
-                  width: ResponsiveUI.value(context, 80),
-                  height: ResponsiveUI.value(context, 80),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color.fromRGBO(158, 9, 15, 1),
-                        const Color.fromRGBO(120, 7, 11, 1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 24)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: ResponsiveUI.value(context, 15),
-                        offset: Offset(0, ResponsiveUI.value(context, 8)),
+        child: Stack(
+          children: [
+            // Main content
+            SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.all(ResponsiveUI.padding(context, 24.0)),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(height: ResponsiveUI.screenHeight(context) * 0.08),
+                    // Logo and Title
+                    Container(
+                      width: ResponsiveUI.value(context, 80),
+                      height: ResponsiveUI.value(context, 80),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color.fromRGBO(158, 9, 15, 1),
+                            const Color.fromRGBO(120, 7, 11, 1),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 24)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: ResponsiveUI.value(context, 15),
+                            offset: Offset(0, ResponsiveUI.value(context, 8)),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.fastfood_rounded,
-                    color: Colors.white,
-                    size: ResponsiveUI.iconSize(context, 40),
-                  ),
-                ),
-                SizedBox(height: ResponsiveUI.spacing(context, 32)),
-                Text(
-                  'Food2Go Admin',
-                  style: TextStyle(
-                    fontSize: ResponsiveUI.fontSize(context, 32),
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: ResponsiveUI.spacing(context, 12)),
-                Text(
-                  'Sign in to your admin panel',
-                  style: TextStyle(
-                    fontSize: ResponsiveUI.fontSize(context, 16),
-                    color: Colors.white70,
-                  ),
-                ),
-                SizedBox(height: ResponsiveUI.screenHeight(context) * 0.06),
-                // Login Card
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: ResponsiveUI.contentMaxWidth(context),
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 28)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: ResponsiveUI.value(context, 30),
-                          offset: Offset(0, ResponsiveUI.value(context, 10)),
-                        ),
-                      ],
+                      child: Icon(
+                        Icons.fastfood_rounded,
+                        color: Colors.white,
+                        size: ResponsiveUI.iconSize(context, 40),
+                      ),
                     ),
-                    padding: EdgeInsets.all(ResponsiveUI.padding(context, 32)),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Email Field
-                        Text(
-                          'Email Address',
-                          style: TextStyle(
-                            fontSize: ResponsiveUI.fontSize(context, 14),
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF333333),
-                          ),
-                        ),
-                        SizedBox(height: ResponsiveUI.spacing(context, 10)),
-                        TextField(
-                          controller: emailController,
-                          decoration: InputDecoration(
-                            hintText: 'Enter your email address',
-                            prefixIcon: Icon(
-                              Icons.mail_outline_rounded,
-                              color: const Color.fromRGBO(158, 9, 15, 1),
-                              size: ResponsiveUI.iconSize(context, 22),
+                    SizedBox(height: ResponsiveUI.spacing(context, 32)),
+                    Text(
+                      'Food2Go Admin',
+                      style: TextStyle(
+                        fontSize: ResponsiveUI.fontSize(context, 32),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: ResponsiveUI.spacing(context, 12)),
+                    Text(
+                      'Sign in to your admin panel',
+                      style: TextStyle(
+                        fontSize: ResponsiveUI.fontSize(context, 16),
+                        color: Colors.white70,
+                      ),
+                    ),
+                    SizedBox(height: ResponsiveUI.screenHeight(context) * 0.06),
+                    // Login Card
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: ResponsiveUI.contentMaxWidth(context),
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.95),
+                          borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 28)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: ResponsiveUI.value(context, 30),
+                              offset: Offset(0, ResponsiveUI.value(context, 10)),
                             ),
-                            filled: true,
-                            fillColor: const Color(0xFFF5F5F5),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 14)),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE0E0E0),
-                                width: 2,
+                          ],
+                        ),
+                        padding: EdgeInsets.all(ResponsiveUI.padding(context, 32)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Email Field
+                            Text(
+                              'Email Address',
+                              style: TextStyle(
+                                fontSize: ResponsiveUI.fontSize(context, 14),
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF333333),
                               ),
                             ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 14)),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE0E0E0),
-                                width: 2,
+                            SizedBox(height: ResponsiveUI.spacing(context, 10)),
+                            TextField(
+                              controller: emailController,
+                              decoration: InputDecoration(
+                                hintText: 'Enter your email address',
+                                prefixIcon: Icon(
+                                  Icons.mail_outline_rounded,
+                                  color: const Color.fromRGBO(158, 9, 15, 1),
+                                  size: ResponsiveUI.iconSize(context, 22),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF5F5F5),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 14)),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFE0E0E0),
+                                    width: 2,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 14)),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFE0E0E0),
+                                    width: 2,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 14)),
+                                  borderSide: const BorderSide(
+                                    color: Color.fromRGBO(158, 9, 15, 1),
+                                    width: 2,
+                                  ),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: ResponsiveUI.padding(context, 16),
+                                  horizontal: ResponsiveUI.padding(context, 16),
+                                ),
+                              ),
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                            SizedBox(height: ResponsiveUI.spacing(context, 24)),
+                            // Password Field
+                            Text(
+                              'Password',
+                              style: TextStyle(
+                                fontSize: ResponsiveUI.fontSize(context, 14),
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF333333),
                               ),
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 14)),
-                              borderSide: const BorderSide(
-                                color: Color.fromRGBO(158, 9, 15, 1),
-                                width: 2,
+                            SizedBox(height: ResponsiveUI.spacing(context, 10)),
+                            TextField(
+                              controller: passwordController,
+                              obscureText: !showPassword,
+                              decoration: InputDecoration(
+                                hintText: 'Enter your password',
+                                prefixIcon: Icon(
+                                  Icons.lock_outline_rounded,
+                                  color: const Color.fromRGBO(158, 9, 15, 1),
+                                  size: ResponsiveUI.iconSize(context, 22),
+                                ),
+                                suffixIcon: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      showPassword = !showPassword;
+                                    });
+                                  },
+                                  child: Icon(
+                                    showPassword
+                                        ? Icons.visibility_rounded
+                                        : Icons.visibility_off_rounded,
+                                    color: Colors.grey[600],
+                                    size: ResponsiveUI.iconSize(context, 22),
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF5F5F5),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 14)),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFE0E0E0),
+                                    width: 2,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 14)),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFE0E0E0),
+                                    width: 2,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 14)),
+                                  borderSide: const BorderSide(
+                                    color: Color.fromRGBO(158, 9, 15, 1),
+                                    width: 2,
+                                  ),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: ResponsiveUI.padding(context, 16),
+                                  horizontal: ResponsiveUI.padding(context, 16),
+                                ),
                               ),
                             ),
-                            contentPadding: EdgeInsets.symmetric(
-                              vertical: ResponsiveUI.padding(context, 16),
-                              horizontal: ResponsiveUI.padding(context, 16),
-                            ),
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        SizedBox(height: ResponsiveUI.spacing(context, 24)),
-                        // Password Field
-                        Text(
-                          'Password',
-                          style: TextStyle(
-                            fontSize: ResponsiveUI.fontSize(context, 14),
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF333333),
-                          ),
-                        ),
-                        SizedBox(height: ResponsiveUI.spacing(context, 10)),
-                        TextField(
-                          controller: passwordController,
-                          obscureText: !showPassword,
-                          decoration: InputDecoration(
-                            hintText: 'Enter your password',
-                            prefixIcon: Icon(
-                              Icons.lock_outline_rounded,
-                              color: const Color.fromRGBO(158, 9, 15, 1),
-                              size: ResponsiveUI.iconSize(context, 22),
-                            ),
-                            suffixIcon: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  showPassword = !showPassword;
-                                });
+                            SizedBox(height: ResponsiveUI.spacing(context, 28)),
+                            // Login Button
+                            BlocConsumer<LoginCubit, LoginState>(
+                              listener: (context, state) {
+                                if (state is LoginSuccess) {
+                                  showAwesomeSnackbar(
+                                    context: context,
+                                    title: 'Success!',
+                                    message: 'You have been logged in successfully',
+                                    contentType: ContentType.success,
+                                  );
+                                  Future.delayed(const Duration(seconds: 1), () {
+                                    Navigator.of(context).pushReplacementNamed(
+                                      HomeScreen.routeName,
+                                    );
+                                  });
+                                } else if (state is LoginError) {
+                                  showAwesomeSnackbar(
+                                    context: context,
+                                    title: 'Error!',
+                                    message: state.message,
+                                    contentType: ContentType.failure,
+                                  );
+                                }
                               },
-                              child: Icon(
-                                showPassword
-                                    ? Icons.visibility_rounded
-                                    : Icons.visibility_off_rounded,
-                                color: Colors.grey[600],
-                                size: ResponsiveUI.iconSize(context, 22),
-                              ),
+                              builder: (context, state) {
+                                return SizedBox(
+                                  width: double.infinity,
+                                  height: ResponsiveUI.value(context, 56),
+                                  child: ElevatedButton(
+                                    onPressed: state is LoginLoading
+                                        ? null
+                                        : () {
+                                      if (emailController.text.isNotEmpty &&
+                                          passwordController.text.isNotEmpty) {
+                                        context.read<LoginCubit>().login(
+                                          email: emailController.text,
+                                          password: passwordController.text,
+                                        );
+                                      } else {
+                                        showAwesomeSnackbar(
+                                          context: context,
+                                          title: 'Warning!',
+                                          message: 'Please fill all fields to continue',
+                                          contentType: ContentType.warning,
+                                        );
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color.fromRGBO(158, 9, 15, 1),
+                                      disabledBackgroundColor: const Color.fromRGBO(
+                                        158,
+                                        9,
+                                        15,
+                                        0.5,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 14)),
+                                      ),
+                                      elevation: ResponsiveUI.value(context, 8),
+                                    ),
+                                    child: state is LoginLoading
+                                        ? SizedBox(
+                                      width: ResponsiveUI.value(context, 20),
+                                      height: ResponsiveUI.value(context, 20),
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: ResponsiveUI.value(context, 2.5),
+                                      ),
+                                    )
+                                        : Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'Sign In',
+                                          style: TextStyle(
+                                            fontSize: ResponsiveUI.fontSize(context, 16),
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                            filled: true,
-                            fillColor: const Color(0xFFF5F5F5),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 14)),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE0E0E0),
-                                width: 2,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 14)),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE0E0E0),
-                                width: 2,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 14)),
-                              borderSide: const BorderSide(
-                                color: Color.fromRGBO(158, 9, 15, 1),
-                                width: 2,
-                              ),
-                            ),
-                            contentPadding: EdgeInsets.symmetric(
-                              vertical: ResponsiveUI.padding(context, 16),
-                              horizontal: ResponsiveUI.padding(context, 16),
-                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: ResponsiveUI.spacing(context, 16)),
+                    Text(
+                      '© 2024 Food2Go. All rights reserved.',
+                      style: TextStyle(
+                        fontSize: ResponsiveUI.fontSize(context, 12),
+                        color: Colors.white.withOpacity(0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            // زر تغيير المطعم في أعلى اليمين
+            Positioned(
+              top: 16,
+              right: 16,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    Icons.restaurant_menu,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  tooltip: 'Change Restaurant',
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        title: Text(
+                          'Change Restaurant',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
                           ),
                         ),
-                        SizedBox(height: ResponsiveUI.spacing(context, 28)),
-                        // Login Button
-                        BlocConsumer<LoginCubit, LoginState>(
-                          listener: (context, state) {
-                            if (state is LoginSuccess) {
-                              showAwesomeSnackbar(
-                                context: context,
-                                title: 'Success!',
-                                message: 'You have been logged in successfully',
-                                contentType: ContentType.success,
-                              );
-                              Future.delayed(const Duration(seconds: 1), () {
-                                Navigator.of(context).pushReplacementNamed(
-                                  HomeScreen.routeName,
-                                );
-                              });
-                            } else if (state is LoginError) {
-                              showAwesomeSnackbar(
-                                context: context,
-                                title: 'Error!',
-                                message: state.message,
-                                contentType: ContentType.failure,
-                              );
-                            }
-                          },
-                          builder: (context, state) {
-                            return SizedBox(
-                              width: double.infinity,
-                              height: ResponsiveUI.value(context, 56),
-                              child: ElevatedButton(
-                                onPressed: state is LoginLoading
-                                    ? null
-                                    : () {
-                                  if (emailController.text.isNotEmpty &&
-                                      passwordController.text.isNotEmpty) {
-                                    context.read<LoginCubit>().login(
-                                      email: emailController.text,
-                                      password: passwordController.text,
-                                    );
-                                  } else {
-                                    showAwesomeSnackbar(
-                                      context: context,
-                                      title: 'Warning!',
-                                      message: 'Please fill all fields to continue',
-                                      contentType: ContentType.warning,
-                                    );
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color.fromRGBO(158, 9, 15, 1),
-                                  disabledBackgroundColor: const Color.fromRGBO(
-                                    158,
-                                    9,
-                                    15,
-                                    0.5,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(ResponsiveUI.borderRadius(context, 14)),
-                                  ),
-                                  elevation: ResponsiveUI.value(context, 8),
-                                ),
-                                child: state is LoginLoading
-                                    ? SizedBox(
-                                  width: ResponsiveUI.value(context, 20),
-                                  height: ResponsiveUI.value(context, 20),
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: ResponsiveUI.value(context, 2.5),
-                                  ),
-                                )
-                                    : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Sign In',
-                                      style: TextStyle(
-                                        fontSize: ResponsiveUI.fontSize(context, 16),
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                        content: Text(
+                          'Do you want to change the restaurant? All data will be cleared.',
+                          style: TextStyle(fontSize: 16),
                         ),
-                      ],
-                    ),
-                  ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: Text(
+                              'Change',
+                              style: TextStyle(
+                                color: Color.fromRGBO(158, 9, 15, 1),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmed == true && mounted) {
+                      // مسح التوكن والـ FCM token وكل البيانات
+                      // مع تمرير clearRestaurantData = true عشان ميروحش للـ Login
+                      await context.read<LoginCubit>().logout(clearRestaurantData: true);
+                      
+                      // الانتقال لشاشة اختيار المطعم
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        RestaurantSelectionScreen.routeName,
+                        (route) => false,
+                      );
+                    }
+                  },
                 ),
-                SizedBox(height: ResponsiveUI.spacing(context, 16)),
-                Text(
-                  '© 2024 Food2Go. All rights reserved.',
-                  style: TextStyle(
-                    fontSize: ResponsiveUI.fontSize(context, 12),
-                    color: Colors.white.withOpacity(0.6),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

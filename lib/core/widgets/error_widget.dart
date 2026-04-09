@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/responsive_ui.dart';
-import '../../feature/home_screen/dine_in_order_tab/cubit/dine_cubit.dart';
 
 class ErrorWidgetDine extends StatelessWidget {
   final String message;
+  final VoidCallback? onRetry;
 
-  const ErrorWidgetDine({super.key, required this.message});
+  const ErrorWidgetDine({
+    super.key, 
+    required this.message,
+    this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +39,7 @@ class ErrorWidgetDine extends StatelessWidget {
             ),
             SizedBox(height: ResponsiveUI.spacing(context, 24)),
             ElevatedButton.icon(
-              onPressed: () {
-
-              },
+              onPressed: onRetry,
               icon: Icon(Icons.refresh, size: ResponsiveUI.iconSize(context, 20)),
               label: Text('Try Again', style: TextStyle(fontSize: ResponsiveUI.fontSize(context, 16))),
               style: ElevatedButton.styleFrom(

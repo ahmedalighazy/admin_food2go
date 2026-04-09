@@ -20,11 +20,8 @@ class OrderCubit extends Cubit<OrderState> {
   OrderItemModel? orderItem;
   InvoiceModel? invoice;
 
-  // Get orders count and statistics
-  Future<void> getOrdersCount({
-    String? start,
-    String? end,
-  }) async {
+  // ── Get orders count (للـ OrderTab) ──────────────────────────────────────
+  Future<void> getOrdersCount({String? start, String? end}) async {
     if (isClosed) return;
     emit(OrderLoading());
     try {
@@ -36,30 +33,48 @@ class OrderCubit extends Cubit<OrderState> {
         },
       );
       DioHelper.printResponse(response);
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data != null) {
-          orderList = OrderCount.fromJson(data);
-          if (isClosed) return;
-          emit(OrderSuccess());
-        } else {
-          if (isClosed) return;
-          emit(OrderError(message: 'No data received'));
-        }
+      if (response.statusCode == 200 && response.data != null) {
+        orderList = OrderCount.fromJson(response.data);
+        if (isClosed) return;
+        emit(OrderSuccess());
       } else {
         if (isClosed) return;
-        emit(OrderError(
-          message: 'Failed to load orders: ${response.statusCode}',
-        ));
+        emit(OrderError(message: 'Failed to load orders: ${response.statusCode}'));
       }
     } catch (error) {
       if (isClosed) return;
-      final errorMessage = ErrorHandler.handleError(error);
-      emit(OrderError(message: errorMessage));
+      emit(OrderError(message: ErrorHandler.handleError(error)));
     }
   }
 
-  // Get orders by status
+  // ── Get orders count بدون ما يأثر على الـ UI (للـ OrderListScreen) ────────
+  Future<void> refreshOrdersCount({String? start, String? end}) async {
+    if (isClosed) return;
+    emit(OrderCountLoading());
+    try {
+      final response = await DioHelper.getData(
+        url: EndPoint.ordersCount,
+        query: {
+          if (start != null) 'start': start,
+          if (end != null) 'end': end,
+        },
+      );
+      DioHelper.printResponse(response);
+      if (response.statusCode == 200 && response.data != null) {
+        orderList = OrderCount.fromJson(response.data);
+        if (isClosed) return;
+        emit(OrderCountSuccess());
+      } else {
+        if (isClosed) return;
+        emit(OrderCountError(message: 'Failed: ${response.statusCode}'));
+      }
+    } catch (error) {
+      if (isClosed) return;
+      emit(OrderCountError(message: ErrorHandler.handleError(error)));
+    }
+  }
+
+  // ── Get orders by status ──────────────────────────────────────────────────
   Future<void> getOrdersByStatus({
     required String orderStatus,
     String? start,
@@ -77,72 +92,64 @@ class OrderCubit extends Cubit<OrderState> {
         },
       );
       DioHelper.printResponse(response);
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data != null) {
-          orders = OrderList.fromJson(data);
-          if (orders?.orders == null || orders!.orders!.isEmpty) {
-            if (isClosed) return;
-            emit(OrderListEmpty());
-          } else {
-            if (isClosed) return;
-            emit(OrderListSuccess());
-          }
+      if (response.statusCode == 200 && response.data != null) {
+        orders = OrderList.fromJson(response.data);
+        if (isClosed) return;
+        if (orders?.orders == null || orders!.orders!.isEmpty) {
+          emit(OrderListEmpty());
         } else {
-          if (isClosed) return;
-          emit(OrderError(message: 'No data received'));
+          emit(OrderListSuccess());
         }
       } else {
         if (isClosed) return;
-        emit(OrderError(
-          message: 'Failed to load orders: ${response.statusCode}',
-        ));
+        emit(OrderListError(message: 'Failed: ${response.statusCode}'));
       }
     } catch (error) {
       if (isClosed) return;
-      final errorMessage = ErrorHandler.handleError(error);
-      emit(OrderError(message: errorMessage));
-      if (error is DioException && error.response?.statusCode == 404) {
-        emit(OrderError(message: 'Endpoint not found. Check server routes for orders list.'));
-      } else {
-        emit(OrderError(message: errorMessage));
-      }
+      emit(OrderListError(message: ErrorHandler.handleError(error)));
     }
   }
 
-  // Get order item details by order ID
+  // ── Get order item ────────────────────────────────────────────────────────
   Future<void> getOrderItem({required int orderId}) async {
     if (isClosed) return;
-    emit(OrderLoading());
+    emit(OrderItemLoading());
     try {
+      print('🔍 Fetching order item for orderId: $orderId');
       final response = await DioHelper.getData(
         url: '${EndPoint.OrderItem}/$orderId',
       );
       DioHelper.printResponse(response);
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data != null) {
-          orderItem = OrderItemModel.fromJson(data);
+      
+      print('📦 Response status: ${response.statusCode}');
+      print('📦 Response data type: ${response.data.runtimeType}');
+      print('📦 Response data: ${response.data}');
+      
+      if (response.statusCode == 200 && response.data != null) {
+        try {
+          print('🔄 Starting to parse order item...');
+          orderItem = OrderItemModel.fromJson(response.data);
+          print('✅ Order item parsed successfully');
           if (isClosed) return;
-          emit(OrderSuccess());
-        } else {
+          emit(OrderItemSuccess());
+        } catch (parseError, stackTrace) {
+          print('❌ Parsing error: $parseError');
+          print('📍 Stack trace: $stackTrace');
           if (isClosed) return;
-          emit(OrderError(message: 'No data received'));
+          emit(OrderItemError(message: 'Failed to parse order data: $parseError'));
         }
       } else {
         if (isClosed) return;
-        emit(OrderError(
-          message: 'Failed to load order details: ${response.statusCode}',
-        ));
+        emit(OrderItemError(message: 'Failed: ${response.statusCode}'));
       }
     } catch (error) {
+      print('❌ Error in getOrderItem: $error');
       if (isClosed) return;
-      final errorMessage = ErrorHandler.handleError(error);
-      emit(OrderError(message: errorMessage));
+      emit(OrderItemError(message: ErrorHandler.handleError(error)));
     }
   }
 
-  // Get order invoice by order ID
+  // ── Get order invoice ─────────────────────────────────────────────────────
   Future<void> getOrderInvoice({required int orderId}) async {
     if (isClosed) return;
     emit(OrderInvoiceLoading());
@@ -151,30 +158,35 @@ class OrderCubit extends Cubit<OrderState> {
         url: '${EndPoint.OrderInvoice}/$orderId',
       );
       DioHelper.printResponse(response);
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data != null) {
-          invoice = InvoiceModel.fromJson(data);
-          if (isClosed) return;
-          emit(OrderInvoiceSuccess());
-        } else {
-          if (isClosed) return;
-          emit(OrderError(message: 'No invoice data received'));
+      if (response.statusCode == 200 && response.data != null) {
+        print('🔍 Parsing invoice data...');
+        print('🔍 Response data type: ${response.data.runtimeType}');
+        print('🔍 Response data keys: ${response.data is Map ? response.data.keys.toList() : 'Not a map'}');
+        
+        invoice = InvoiceModel.fromJson(response.data);
+        
+        print('✅ Invoice parsed successfully');
+        print('✅ Invoice.order is null: ${invoice?.order == null}');
+        if (invoice?.order != null) {
+          print('✅ Order ID: ${invoice!.order!.id}');
+          print('✅ Order Number: ${invoice!.order!.orderNumber}');
         }
+        
+        if (isClosed) return;
+        emit(OrderInvoiceSuccess());
       } else {
         if (isClosed) return;
-        emit(OrderError(
-          message: 'Failed to load invoice: ${response.statusCode}',
-        ));
+        emit(OrderInvoiceError(message: 'Failed: ${response.statusCode}'));
       }
-    } catch (error) {
+    } catch (error, stackTrace) {
+      print('❌ Error parsing invoice: $error');
+      print('❌ Stack trace: $stackTrace');
       if (isClosed) return;
-      final errorMessage = ErrorHandler.handleError(error);
-      emit(OrderError(message: errorMessage));
+      emit(OrderInvoiceError(message: ErrorHandler.handleError(error)));
     }
   }
 
-  // Change order status
+  // ── Change order status ───────────────────────────────────────────────────
   Future<void> changeOrderStatus({
     required int orderId,
     required String newStatus,
@@ -184,41 +196,31 @@ class OrderCubit extends Cubit<OrderState> {
     try {
       final response = await DioHelper.putData(
         url: '${EndPoint.ordersChangeStatus}$orderId',
-        data: {
-          'order_status': newStatus,
-        },
+        data: {'order_status': newStatus},
       );
       DioHelper.printResponse(response);
       if (response.statusCode == 200) {
         if (isClosed) return;
         emit(OrderStatusChangeSuccess());
-        // Refresh the order list after successful status change
-        if (orders != null && orders!.orders != null) {
-          final orderIndex = orders!.orders!.indexWhere((o) => o.id == orderId);
-          if (orderIndex != -1) {
-            orders!.orders![orderIndex].orderStatus = newStatus;
-          }
+        if (orders?.orders != null) {
+          final idx = orders!.orders!.indexWhere((o) => o.id == orderId);
+          if (idx != -1) orders!.orders![idx].orderStatus = newStatus;
         }
       } else {
         if (isClosed) return;
-        emit(OrderError(
-          message: 'Failed to change order status: ${response.statusCode}',
-        ));
+        emit(OrderStatusChangeError(message: 'Failed: ${response.statusCode}'));
       }
     } catch (error) {
       if (isClosed) return;
-      final errorMessage = ErrorHandler.handleError(error);
-      emit(OrderError(message: errorMessage));
+      emit(OrderStatusChangeError(message: ErrorHandler.handleError(error)));
     }
   }
 
-  // Reset state
   void resetState() {
     if (isClosed) return;
     emit(OrderInitial());
   }
 
-  // Clear data
   void clearData() {
     orderList = null;
     orders = null;
@@ -228,13 +230,6 @@ class OrderCubit extends Cubit<OrderState> {
     emit(OrderInitial());
   }
 
-  // Clear only order item
-  void clearOrderItem() {
-    orderItem = null;
-  }
-
-  // Clear only invoice
-  void clearInvoice() {
-    invoice = null;
-  }
+  void clearOrderItem() => orderItem = null;
+  void clearInvoice() => invoice = null;
 }

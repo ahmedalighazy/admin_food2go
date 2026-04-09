@@ -73,7 +73,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       backgroundColor: Colors.grey[100],
       body: BlocBuilder<OrderCubit, OrderState>(
         builder: (context, state) {
-          if (state is OrderLoading) {
+          if (state is OrderItemLoading) {
             return const Center(
               child: CircularProgressIndicator(
                 color: AppColors.colorPrimary,
@@ -81,9 +81,15 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
             );
           }
 
-          if (state is OrderError) {
+          if (state is OrderItemError) {
             return Center(
-              child: ErrorWidgetDine(message: state.message),
+              child: ErrorWidgetDine(
+                message: state.message,
+                onRetry: () {
+                  final orderId = widget.orderId;
+                  context.read<OrderCubit>().getOrderItem(orderId: orderId);
+                },
+              ),
             );
           }
 
@@ -327,7 +333,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
             _buildInfoRow(Icons.email, 'Email', user.email!),
           ],
           const SizedBox(height: 12),
-          _buildInfoRow(Icons.stars, 'Points', '${user.points ?? 0}'),
+          _buildInfoRow(Icons.wallet_giftcard_sharp, 'Points', '${user.points ?? 0}'),
           const SizedBox(height: 12),
           _buildInfoRow(Icons.shopping_bag, 'Total Orders', '${user.ordersCount ?? 0}'),
         ],
@@ -447,7 +453,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
           ],
           if (order.points != null && order.points! > 0) ...[
             const SizedBox(height: 12),
-            _buildInfoRow(Icons.stars, 'Points Used', '${order.points}'),
+            _buildInfoRow(Icons.wallet_giftcard_sharp, 'Points Used', '${order.points}'),
           ],
           const Divider(height: 24),
           Container(

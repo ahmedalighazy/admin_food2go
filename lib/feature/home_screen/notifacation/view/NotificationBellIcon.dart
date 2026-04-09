@@ -12,6 +12,7 @@ class NotificationBellIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<NotificationService>(
+      key: const Key('notification_bell_consumer'),
       builder: (context, notificationService, child) {
         final unreadCount = notificationService.unreadCount;
 
@@ -38,6 +39,7 @@ class NotificationBellIcon extends StatelessWidget {
                 right: ResponsiveUI.value(context, 8),
                 top: ResponsiveUI.value(context, 8),
                 child: Container(
+                  key: ValueKey('badge_$unreadCount'), // Dynamic key for rebuild
                   padding: EdgeInsets.all(unreadCount > 99 ? ResponsiveUI.padding(context, 3) : ResponsiveUI.padding(context, 4)),
                   decoration: BoxDecoration(
                     color: Colors.red,

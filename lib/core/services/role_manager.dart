@@ -18,6 +18,9 @@ class RoleManager {
 
       if (cachedAdmin != null) {
         _currentAdmin = cachedAdmin;
+        log('📱 Admin data loaded: ${cachedAdmin.name ?? "Unknown"}');
+        log('📱 Admin role: ${cachedAdmin.role ?? "No direct role"}');
+        log('📱 Admin userPositions: ${cachedAdmin.userPositions?.name ?? "No position"}');
 
         // Check if user has userPositions with roles
         if (cachedAdmin.userPositions?.roles != null &&
@@ -25,6 +28,9 @@ class RoleManager {
           _userRoles = cachedAdmin.userPositions!.roles;
           _directRole = null;
           log('✅ Roles initialized: ${_userRoles?.length ?? 0} roles found');
+          for (var role in _userRoles!) {
+            log('   - Role: ${role.role}, Action: ${role.action}');
+          }
         }
         // Check if user has direct role (like 'branch', 'admin', etc.)
         else if (cachedAdmin.role != null && cachedAdmin.role!.isNotEmpty) {
@@ -69,19 +75,31 @@ class RoleManager {
 
   // Check if user has a specific role with specific action
   static bool hasRole(String roleName, {String action = 'all'}) {
+    log('🔍 Checking role: $roleName (action: $action)');
+    
     // If user has userPositions.roles (detailed role system)
     if (_userRoles != null && _userRoles!.isNotEmpty) {
+      log('📋 Checking against ${_userRoles!.length} detailed roles');
+      for (var role in _userRoles!) {
+        log('   - Role: ${role.role}, Action: ${role.action}');
+      }
+      
       final hasAccess = _userRoles!.any((role) {
         final roleMatch = role.role?.toLowerCase() == roleName.toLowerCase();
         final actionMatch = role.action == 'all' || role.action == action;
         return roleMatch && actionMatch;
       });
+      
+      log('✅ Role check result for $roleName: $hasAccess');
       return hasAccess;
     }
 
     // If user has direct role (simple role system)
     if (_directRole != null && _directRole!.isNotEmpty) {
-      return _checkDirectRoleAccess(roleName);
+      log('👔 Checking direct role: $_directRole against required: $roleName');
+      final result = _checkDirectRoleAccess(roleName);
+      log('✅ Direct role check result for $roleName: $result');
+      return result;
     }
 
     log('⚠️ No roles available for check: $roleName');
@@ -90,17 +108,25 @@ class RoleManager {
 
   // Check access based on direct role
   static bool _checkDirectRoleAccess(String requiredRole) {
-    if (_directRole == null) return false;
+    if (_directRole == null) {
+      log('❌ No direct role set');
+      return false;
+    }
 
     final role = _directRole!.toLowerCase();
     final required = requiredRole.toLowerCase();
+    
+    log('🔍 Direct role check: "$role" vs required "$required"');
 
     // Admin has access to everything
-    if (role == 'admin') return true;
+    if (role == 'admin') {
+      log('✅ Admin has access to everything');
+      return true;
+    }
 
     // Branch specific permissions
     if (role == 'branch') {
-      return [
+      final branchPermissions = [
         'home',
         'order',
         'posorder',
@@ -112,36 +138,111 @@ class RoleManager {
         'cashier',
         'cashierman',
         'captain',
-      ].contains(required);
+      ];
+      
+      final hasAccess = branchPermissions.contains(required);
+      log('🏢 Branch role check for "$required": $hasAccess');
+      return hasAccess;
     }
 
     // Delivery specific permissions
     if (role == 'delivery' || role == 'delivery_man') {
-      return [
+      final deliveryPermissions = [
         'home',
         'order',
         'delivery',
         'profile',
-      ].contains(required);
+      ];
+      
+      final hasAccess = deliveryPermissions.contains(required);
+      log('🚚 Delivery role check for "$required": $hasAccess');
+      return hasAccess;
     }
 
     // User with no specific role - profile only
     if (role == 'user') {
-      return required == 'profile';
+      final hasAccess = required == 'profile';
+      log('👤 User role check for "$required": $hasAccess');
+      return hasAccess;
     }
 
     // Default: check if roles match
-    return role == required;
+    final hasAccess = role == required;
+    log('🔄 Default role match check for "$required": $hasAccess');
+    return hasAccess;
   }
 
   // Check if user can view Home tab
-  static bool canViewHome() => hasRole('Home');
+  static bool canViewHome() {
+    // Admin always has access
+    if (_directRole == 'admin') return true;
+    
+    // Branch users have access to home
+    if (_directRole == 'branch') return true;
+    
+    // If user has detailed roles, check for Admin role
+    if (_userRoles != null && _userRoles!.isNotEmpty) {
+      final hasAdminRole = _userRoles!.any((role) => 
+        role.role?.toLowerCase() == 'admin' && 
+        (role.action == 'all' || role.action == 'view' || role.action == 'edit')
+      );
+      if (hasAdminRole) return true;
+    }
+    
+    // TEMPORARY FIX: Allow all users to see home tab
+    if (_directRole != null && _directRole!.isNotEmpty) return true;
+    
+    // Check detailed roles
+    return hasRole('Home') || hasRole('home');
+  }
 
   // Check if user can view Orders tab
-  static bool canViewOrders() => hasRole('Order');
+  static bool canViewOrders() {
+    // Admin always has access
+    if (_directRole == 'admin') return true;
+    
+    // Branch users have access to orders
+    if (_directRole == 'branch') return true;
+    
+    // If user has detailed roles, check for Admin role
+    if (_userRoles != null && _userRoles!.isNotEmpty) {
+      final hasAdminRole = _userRoles!.any((role) => 
+        role.role?.toLowerCase() == 'admin' && 
+        (role.action == 'all' || role.action == 'view' || role.action == 'edit')
+      );
+      if (hasAdminRole) return true;
+    }
+    
+    // TEMPORARY FIX: Allow all users to see orders tab
+    if (_directRole != null && _directRole!.isNotEmpty) return true;
+    
+    // Check detailed roles
+    return hasRole('Order') || hasRole('order') || hasRole('orders');
+  }
 
   // Check if user can view Dine-In/POS tab
-  static bool canViewDineIn() => hasRole('PosOrder') || hasRole('PosTable');
+  static bool canViewDineIn() {
+    // Admin always has access
+    if (_directRole == 'admin') return true;
+    
+    // Branch users have access to dine-in
+    if (_directRole == 'branch') return true;
+    
+    // If user has detailed roles, check for Admin role
+    if (_userRoles != null && _userRoles!.isNotEmpty) {
+      final hasAdminRole = _userRoles!.any((role) => 
+        role.role?.toLowerCase() == 'admin' && 
+        (role.action == 'all' || role.action == 'view' || role.action == 'edit')
+      );
+      if (hasAdminRole) return true;
+    }
+    
+    // TEMPORARY FIX: Allow all users to see dine-in tab
+    if (_directRole != null && _directRole!.isNotEmpty) return true;
+    
+    // Check detailed roles
+    return hasRole('PosOrder') || hasRole('PosTable') || hasRole('posorder') || hasRole('postable') || hasRole('dine_in');
+  }
 
   // Check if user can view Profile tab
   static bool canViewProfile() => true; // Everyone can view their profile
@@ -183,6 +284,22 @@ class RoleManager {
   static List<NavigationTab> getAccessibleTabs() {
     final tabs = <NavigationTab>[];
 
+    log('🔍 Checking accessible tabs for role: ${_directRole ?? "roles-based"}');
+    
+    // Log all available roles for debugging
+    if (_userRoles != null && _userRoles!.isNotEmpty) {
+      log('📋 Available roles (${_userRoles!.length}):');
+      final uniqueRoles = <String>{};
+      for (var role in _userRoles!) {
+        if (role.role != null) {
+          uniqueRoles.add('${role.role} (${role.action})');
+        }
+      }
+      for (var role in uniqueRoles) {
+        log('   - $role');
+      }
+    }
+    
     if (canViewHome()) {
       tabs.add(NavigationTab(
         index: 0,
@@ -190,6 +307,9 @@ class RoleManager {
         label: 'Home',
         role: 'Home',
       ));
+      log('✅ Added Home tab');
+    } else {
+      log('❌ Home tab not accessible');
     }
 
     if (canViewOrders()) {
@@ -199,6 +319,9 @@ class RoleManager {
         label: 'Orders',
         role: 'Order',
       ));
+      log('✅ Added Orders tab');
+    } else {
+      log('❌ Orders tab not accessible');
     }
 
     if (canViewDineIn()) {
@@ -208,6 +331,9 @@ class RoleManager {
         label: 'Dine-In',
         role: 'PosOrder',
       ));
+      log('✅ Added Dine-In tab');
+    } else {
+      log('❌ Dine-In tab not accessible');
     }
 
     // Profile is always accessible
@@ -217,6 +343,7 @@ class RoleManager {
       label: 'Profile',
       role: 'Profile',
     ));
+    log('✅ Added Profile tab');
 
     // CRITICAL FIX: Ensure at least profile tab exists
     if (tabs.isEmpty) {
@@ -229,7 +356,7 @@ class RoleManager {
       ));
     }
 
-    log('✅ Accessible tabs: ${tabs.length} (Role: ${_directRole ?? "roles-based"})');
+    log('✅ Final accessible tabs: ${tabs.length} (Role: ${_directRole ?? "roles-based"})');
     for (var tab in tabs) {
       log('   - ${tab.label} (index: ${tab.index}, role: ${tab.role})');
     }

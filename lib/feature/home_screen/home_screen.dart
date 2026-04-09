@@ -7,6 +7,7 @@ import 'dine_in_order_tab/view/dine_in_order_tab.dart';
 import 'home_tab/home_tab.dart';
 import 'order_tab/view/order_tab.dart';
 import 'package:admin_food2go/core/services/role_manager.dart';
+import 'package:admin_food2go/core/services/order_notification_polling_service.dart';
 import 'package:admin_food2go/core/utils/responsive_ui.dart';
 import 'dart:developer';
 
@@ -20,7 +21,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _selectedIndex = 0;
   late List<NavigationTab> accessibleTabs;
   late Map<int, Widget> pageMap;
@@ -28,7 +29,28 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializePages();
+    
+    // Start order notification polling
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      OrderNotificationPollingService().startPolling(
+        context: context,
+        interval: const Duration(seconds: 10), // Check every 10 seconds for faster updates
+      );
+      log('🔄 Order notification polling started');
+    });
+  }
+  
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    if (state == AppLifecycleState.resumed) {
+      // App came to foreground - force immediate check
+      log('📱 App resumed - forcing notification check');
+      OrderNotificationPollingService().forceCheck();
+    }
   }
 
   void _initializePages() {
@@ -49,9 +71,12 @@ class _HomeScreenState extends State<HomeScreen> {
     // CRITICAL: Ensure we have at least one tab
     if (accessibleTabs.isEmpty) {
       log('❌ CRITICAL: No accessible tabs found! This should never happen.');
-      // Force add profile tab as emergency fallback
+      // Force add all tabs as emergency fallback
       accessibleTabs = [
-        NavigationTab(index: 3, icon: 'profile', label: 'Profile', role: 'Profile')
+        NavigationTab(index: 0, icon: 'home', label: 'Home', role: 'Home'),
+        NavigationTab(index: 1, icon: 'orders', label: 'Orders', role: 'Order'),
+        NavigationTab(index: 2, icon: 'dine_in', label: 'Dine-In', role: 'PosOrder'),
+        NavigationTab(index: 3, icon: 'profile', label: 'Profile', role: 'Profile'),
       ];
     }
 
@@ -60,6 +85,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     log('✅ HomeScreen initialized with ${accessibleTabs.length} tabs');
     log('📍 Initial tab: ${accessibleTabs[0].label} (page index: ${accessibleTabs[0].index})');
+    
+    // Log all accessible tabs
+    for (var i = 0; i < accessibleTabs.length; i++) {
+      log('   Tab $i: ${accessibleTabs[i].label} (index: ${accessibleTabs[i].index})');
+    }
   }
 
   void _navigateToTab(int targetPageIndex) {
@@ -166,11 +196,11 @@ class _HomeScreenState extends State<HomeScreen> {
       body: _getCurrentPage(),
       bottomNavigationBar: CurvedNavigationBar(
         index: _selectedIndex,
-        height: ResponsiveUI.value(context, 75),
+        height: 60.0, // Fixed height instead of responsive
         items: accessibleTabs
             .map((tab) => Icon(
           _getIconForTab(tab.icon),
-          size: ResponsiveUI.iconSize(context, 30),
+          size: 30.0, // Fixed size instead of responsive
           color: Colors.white,
         ))
             .toList(),
@@ -178,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
         buttonBackgroundColor: const Color.fromRGBO(158, 9, 15, 1),
         backgroundColor: Colors.white,
         animationCurve: Curves.easeInOut,
-        animationDuration: Duration(milliseconds: ResponsiveUI.value(context, 600).toInt()),
+        animationDuration: const Duration(milliseconds: 600), // Fixed duration
         onTap: (index) {
           // Validate index before using it
           if (index >= 0 && index < accessibleTabs.length) {
@@ -212,7 +242,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    log('🧹 HomeScreen disposed');
+    WidgetsBinding.instance.removeObserver(this);
+    // Stop polling when leaving home screen
+    OrderNotificationPollingService().stopPolling();
+    log('🧹 HomeScreen disposed - polling stopped');
     super.dispose();
   }
 }

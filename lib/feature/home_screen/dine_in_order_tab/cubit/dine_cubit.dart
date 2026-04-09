@@ -77,7 +77,7 @@ class DineCubit extends Cubit<DineState> {
 
     try {
       final response = await DioHelper.getData(
-        url: 'admin/order/branches',
+        url: 'admin/pos/orders/branches',
       );
 
       DioHelper.printResponse(response);

@@ -206,6 +206,7 @@ class Order {
     this.address,
     this.admin,
     this.schedule,
+    this.scheduleString,
     this.user,
     this.branch,
   });
@@ -257,7 +258,14 @@ class Order {
     paymentMethod = json['payment_method'] != null ? PaymentMethod.fromJson(json['payment_method']) : null;
     address = json['address'];
     admin = json['admin'];
-    schedule = json['schedule'] != null ? Schedule.fromJson(json['schedule']) : null;
+    // Handle schedule - can be either String or Object
+    if (json['schedule'] != null) {
+      if (json['schedule'] is Map) {
+        schedule = Schedule.fromJson(json['schedule']);
+      } else if (json['schedule'] is String) {
+        scheduleString = json['schedule'];
+      }
+    }
     user = json['user'] != null ? User.fromJson(json['user']) : null;
     branch = json['branch'] != null ? Branch.fromJson(json['branch']) : null;
   }
@@ -299,6 +307,7 @@ class Order {
   dynamic address;
   dynamic admin;
   Schedule? schedule;
+  String? scheduleString;
   User? user;
   Branch? branch;
 
@@ -348,6 +357,8 @@ class Order {
     map['admin'] = admin;
     if (schedule != null) {
       map['schedule'] = schedule?.toJson();
+    } else if (scheduleString != null) {
+      map['schedule'] = scheduleString;
     }
     if (user != null) {
       map['user'] = user?.toJson();
@@ -914,46 +925,63 @@ class OrderDetails {
     this.addons,
     this.excludes,
     this.product,
+    this.productList,
     this.variations,
   });
 
   OrderDetails.fromJson(dynamic json) {
     if (json['extras'] != null) {
       extras = [];
-      json['extras'].forEach((v) {
-        extras?.add(v);
-      });
+      if (json['extras'] is List) {
+        json['extras'].forEach((v) {
+          extras?.add(v);
+        });
+      }
     }
     if (json['addons'] != null) {
       addons = [];
-      json['addons'].forEach((v) {
-        addons?.add(v);
-      });
+      if (json['addons'] is List) {
+        json['addons'].forEach((v) {
+          addons?.add(v);
+        });
+      }
     }
     if (json['excludes'] != null) {
       excludes = [];
-      json['excludes'].forEach((v) {
-        excludes?.add(v);
-      });
+      if (json['excludes'] is List) {
+        json['excludes'].forEach((v) {
+          excludes?.add(v);
+        });
+      }
     }
+    // Handle product - can be either Map (single product) or List (multiple products)
     if (json['product'] != null) {
-      product = [];
-      json['product'].forEach((v) {
-        product?.add(ProductItem.fromJson(v));
-      });
+      if (json['product'] is Map) {
+        // Single product as object
+        product = Product.fromJson(json['product']);
+      } else if (json['product'] is List) {
+        // Multiple products as array
+        productList = [];
+        (json['product'] as List).forEach((v) {
+          productList?.add(ProductItem.fromJson(v));
+        });
+      }
     }
     if (json['variations'] != null) {
       variations = [];
-      json['variations'].forEach((v) {
-        variations?.add(v);
-      });
+      if (json['variations'] is List) {
+        json['variations'].forEach((v) {
+          variations?.add(v);
+        });
+      }
     }
   }
 
   List<dynamic>? extras;
   List<dynamic>? addons;
   List<dynamic>? excludes;
-  List<ProductItem>? product;
+  Product? product;
+  List<ProductItem>? productList;
   List<dynamic>? variations;
 
   Map<String, dynamic> toJson() {
@@ -968,7 +996,9 @@ class OrderDetails {
       map['excludes'] = excludes;
     }
     if (product != null) {
-      map['product'] = product?.map((v) => v.toJson()).toList();
+      map['product'] = product?.toJson();
+    } else if (productList != null) {
+      map['product'] = productList?.map((v) => v.toJson()).toList();
     }
     if (variations != null) {
       map['variations'] = variations;
